@@ -1,0 +1,48 @@
+SliTaz Spk
+================================================================================
+
+
+The SliTaz Spk toolset provide tools and utils to handle SliTaz packages.
+
+
+Spk
+-------------------------------------------------------------------------------
+Spk is the main tool to handle and play with SliTaz packages, it handle multiple
+packages on cmdline and a wide range of --options wo will perform tasks such as
+adding or removing packages using the toolset. Spk itself provide some small
+commands such as ls or info.
+
+
+Toolset
+-------------------------------------------------------------------------------
+Spk is separated in many small tools follwin the UNIX philosophy: one tool for
+one task but do it well. Here is a list of proposal tools and ther functions:
+
+	* spk-add    : Install local or online pkgs
+	* spk-rm     : Remove packages: confirm in option ?
+	* spk-up     : Upgrade the all system
+	* spk-search : Search for packages or files
+	* spk-...    : your turn Christina :-)
+
+
+Devnotes
+-------------------------------------------------------------------------------
+
+	* packages.desc format: package | 1.0 | desc | category | website
+	* packages.md5 format : de9f76250657000958ee0120d376613e  package-1.0.tazpkg
+	* ...
+
+
+Coding style
+--------------------------------------------------------------------------------
+Here are the spk coding style notes, follow them if you want your code included
+in the package. These rules are in addition to cookutils coding style, please
+read also cookutils/README
+
+
+    * No bash, be Busybox Ash compatible
+    * Use libtaz.sh, slitaz.conf and libpkg.sh
+	* ...
+
+================================================================================
+
