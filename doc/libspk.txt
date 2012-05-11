@@ -10,9 +10,11 @@ DESCRIPTION
 
 FUNCTIONS
 	receipt_info
+	extract_receipt
 	count_installed
 	count_mirrored
-
+	equivalent_pkg
+	missing_deps
 OPTIONS
 
 AUTHOR

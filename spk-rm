@@ -46,15 +46,10 @@ case "$1" in
 			# Handle --confirm
 			if [ "$confirm" ]; then
 				gettext "Confirm uninstalltion of:"; echo " $pkg"
-				gettext "Anser [y|Y|yes] or [n|N|no] : "
-				# A read_anser function ?
-				read anser
-				case "$anser" in
-					y|Y|yes) ;;
-					*)
+				if ! yes_no; then
 						gettext "Uninstallation canceled"
 						echo -e "\n" && exit 0 ;;
-				esac
+				fi
 			fi
 			gettext "TODO"; echo
 		done ;;
