@@ -29,10 +29,20 @@ one task but do that task well. Here is a list of proposal tools and ther functi
 
 Devnotes
 -------------------------------------------------------------------------------
+Some random and usefull notes.
 
 	* packages.desc format: package | 1.0 | desc | category | website
 	* packages.md5 format : de9f76250657000958ee0120d376613e  package-1.0.tazpkg
 	* ...
+
+Since we use latest libtaz.sh, slitaz.conf and libpkg.sh code you must install
+these files to develop the Spk Toolset:
+
+	$ hg clone http://hg.slitaz.org/slitaz-base-files
+	$ cd slitaz-base-files
+	$ make install-libtaz
+	$ make install-libpkg
+	$ make install-slitaz
 
 
 Coding style
