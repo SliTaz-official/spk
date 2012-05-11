@@ -1,0 +1,20 @@
+
+SYNOPSIS
+	. /usr/lib/slitaz/libspk.sh
+	function
+
+DESCRIPTION
+	Libpkg provide base functions and variables to all spk-tools. It will
+	source the main /etc/slitaz/slitaz.conf as well as /lib/libtaz.sh and
+	the base packages functions from /usr/lib/slitaz/libpkg.sh
+
+FUNCTIONS
+	receipt_info
+	count_installed
+	count_mirrored
+
+OPTIONS
+
+AUTHOR
+	Written by Christophe Lincoln and Christian Mesh
+
