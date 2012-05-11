@@ -24,7 +24,9 @@ one task but do that task well. Here is a list of proposal tools and ther functi
 	* spk-search : Search for packages or files
 	* spk-archive: Manage pacakge extraction, compression, and packing
 	* spk-mirror : Manage mirrors and undigest
-	* spk-info   : Print info about packages
+
+	* spk-info   : Print info about packages: in spk itself ?
+	  Example: spk pkg1 pkg2 pkg3 will return packages info and status ?
 
 
 Devnotes
