@@ -8,15 +8,16 @@ The SliTaz Spk toolset provide tools and utils to handle SliTaz packages.
 Spk
 -------------------------------------------------------------------------------
 Spk is the main tool to handle and play with SliTaz packages, it handles multiple
-packages on cmdline and a wide range of --options which will perform tasks such as
-adding or removing packages using the toolset. Spk itself provides some small
+packages on cmdline and a wide range of --options which will perform tasks such
+as adding or removing packages using the toolset. Spk itself provides some small
 commands such as ls or info.
 
 
 Toolset
 -------------------------------------------------------------------------------
 Spk is separated in many small tools following the UNIX philosophy: one tool for
-one task but do that task well. Here is a list of proposal tools and ther functions:
+one task but do that task well. Here is a list of proposal tools and ther
+functions:
 
 	* spk-add    : Install local or online pkgs
 	* spk-rm     : Remove packages: confirm in option ?
@@ -25,10 +26,16 @@ one task but do that task well. Here is a list of proposal tools and ther functi
 	* spk-archive: Manage pacakge extraction, compression, and packing
 	* spk-mirror : Manage mirrors and undigest
 
+
 LibSpk
 -------------------------------------------------------------------------------
+Libspk provide base function and internal variables used my almost all spk-tools.
+
+	* Source: libtaz.sh, libpkg.sh, slitaz.conf
+	* Internal Spk variables (lowercase, not configurable)
 	* Display package info
 	* ...
+
 
 Devnotes
 -------------------------------------------------------------------------------
