@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Spk-rm - Remove SliTaz packages. Read the README before adding or
+# modifing any code in spk!
+#
+# Copyright (C) SliTaz GNU/Linux - BSD License
+# Author: See AUTHORS files
+#
+#. /usr/lib/slitaz/libspk.sh
+. lib/libspk.sh
+
+#
+# Functions
+#
+
+# Help and usage
+usage() {
+	name=$(basename $0)
+	cat << EOT
+
+$(boldify $(gettext "Usage:")) [package|--option] [pkg2 ... pkgN|--opt2]
+
+$(boldify $(gettext "Options:"))
+
+$(boldify $(gettext "Examples:"))
+
+EOT
+	exit 0
+}
+
+#
+# Commands
+#
+
+case "$1" in
+	"") usage ;;
+	*)
+		count=0
+		for pkg in $@
+		do
+			[ -d "$installed/$pkg" ] || continue
+			count=$(($count + 1))
+			[ "$count" == 1 ] && echo ""
+			gettext "Removing"; echo " $pkg"
+			separator
+			# Handle --confirm
+			if [ "$confirm" ]; then
+				gettext "Confirm uninstalltion of:"; echo " $pkg"
+				gettext "Anser [y|Y|yes] or [n|N|no] : "
+				# A read_anser function ?
+				read anser
+				case "$anser" in
+					y|Y|yes) ;;
+					*)
+						gettext "Uninstallation canceled"
+						echo -e "\n" && exit 0 ;;
+				esac
+			fi
+			gettext "TODO"; echo
+		done ;;
+esac
+exit 0
