@@ -15,6 +15,7 @@ FUNCTIONS
 	count_mirrored
 	equivalent_pkg
 	missing_deps
+	grepesc
 OPTIONS
 
 AUTHOR

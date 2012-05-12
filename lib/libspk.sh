@@ -15,12 +15,13 @@ mirrorurl="$PKGS_DB/mirror"
 installed="$PKGS_DB/installed"
 pkgsdesc="$PKGS_DB/packages.desc"
 pkgsmd5="$PKGS_DB/packages.md5"
-blocked="$PKGS_DB/blocked.list"
+# ????do we need packages.equiv????
+blocked="$PKGS_DB/blocked-packages.list"
 activity="$PKGS_DB/activity"
 
 #
 # Functions
-#
+
 
 # Display receipt information.
 # Expects a reciept to be sourced
@@ -38,9 +39,9 @@ extract_receipt() {
 	local dir="$1"
 	local file="$2"
 
-	pushd "$dir"
+	pushd "$dir" > /dev/null
 	{ cpio --quiet -i receipt > /dev/null 2>&1; } < $file
-	popd
+	popd > /dev/null
 }
 
 # Used by: list
@@ -55,7 +56,52 @@ count_mirrored() {
 	gettext "Mirrored packages"; echo ": $count"
 }
 
-# get an already installed package from packages.equiv
+is_package_mirrored() {
+	local package_name=$1
+	local occurance=$(cat $pkgsdesc | grep "$package_name ")
+	[ -n "$occurance" ]
+}
+
+# Download a file trying all mirrors
+# Parameters: package/file
+download() {
+	local package=$1
+	local mirror="$(cat $mirrorurl)"
+	case "$package" in
+		*.tazpkg)
+			echo "${mirror%/}/$package"
+			wget -c ${mirror%/}/$package ;; 
+	esac
+}
+
+# Assume package_name is valid
+# There may be a more efficient way to do this...
+full_package() {
+	local package_name=$1
+	local occurance=$(cat $pkgsdesc | grep "$package_name ")
+	local count=0
+	for i in $(echo $occurance | tr "|" "\n"); do
+		if [ $count -eq 1 ]; then
+			echo $package_name-$i
+			return
+		fi
+		count=$(($count+1))
+	done
+}
+
+# Check if a package is already installed.
+# Parameters: package
+check_for_installed_package() {
+	local package_name="$1"
+	
+	if [ -d "$installed/$package_name" ]; then
+		newline
+		echo $package_name $(gettext "package is already installed.")
+		exit 0
+	fi
+}
+
+# get an already installed package from packages.equiv  TODO REDO!
 equivalent_pkg() {
 	for i in $(grep -hs "^$1=" $PKGS_DB/packages.equiv \
 		   $PKGS_DB/undigest/*/packages.equiv | sed "s/^$1=//")
@@ -101,9 +147,17 @@ missing_deps() {
 			gettext "WARNING Dependency loop between \$package and \$pkg."; newline
 		fi
 	done
-
+	if [ $deps -gt 0 ]; then
+		echo $deps $(gettext "missing package(s) to install.")
+	fi
+	
 	gettext "\$deps missing package(s) to install."; newline
 
 	# Return true if missing deps
 	[ "$deps" != "0" ]
 }
+
+grepesc() {
+	sed 's/\[/\\[/g'
+}
+

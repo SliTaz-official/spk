@@ -1,0 +1,346 @@
+#!/bin/sh
+#
+# Authors : See the AUTHORS files
+
+# Set to / for now untill we add installing to chroot support
+# Could we update tools so they do not need this?
+ROOT=""
+TMP_DIR="/tmp/$RANDOM"
+
+source /usr/lib/slitaz/libspk.sh
+
+# This function installs a package in the rootfs.
+# Parameters: package_name package_file
+install_package() {	
+	local package_file=$1
+	
+	# Set by receipt: pre_depends() DEPENDS SELF_INSTALL CONFIG_FILES post_install()
+		
+	# Create package path early to avoid dependencies loop
+	mkdir -p $TMP_DIR
+	extract_receipt $TMP_DIR $package_file
+	source $TMP_DIR/receipt
+	
+	local package_name=$PACKAGE
+	local package_dir="$installed/$package_name"
+	mkdir -p $package_dir
+
+	# Run pre_depends from receipt if it exists
+	if grep -q ^pre_depends $TMP_DIR/receipt; then
+		pre_depends $ROOT
+	fi
+
+	# Create modifiers and files.list if they do not exist
+#	touch $package_dir/modifiers
+#	touch $package_dir/files.list
+
+	# add package checksum to pkgsmd5
+	sed -i "/ $(basename $package_dir)$/d" $pkgsmd5 2> /dev/null
+	pushd $(dirname $package_file) > /dev/null
+		$CHECKSUM $(basename $package_file) >> $pkgsmd5
+	popd > /dev/null
+	
+	# Resolve package deps.
+	if missing_deps $package_name $DEPENDS; then
+		install_deps $package_name $DEPENDS
+	fi
+	
+	newline	
+	boldify $(gettext "Installation of :") $package_name
+	separator
+	eval_gettext "Copying \$package_name... "
+	cp $package_file $TMP_DIR
+	status
+	
+	# Extract Package
+	pushd $TMP_DIR > /dev/null
+		rm receipt
+		spk-archive extract $package_file
+	popd > /dev/null
+	
+	# Get files to remove if upgrading
+	local files_to_remove
+	if [ -f $package_dir/files.list ]; then
+		for file in $($package_dir/files.list); do
+			grep -q "^$(echo $file | grepesc)$" $TMP_DIR/files.list && continue
+			local modifiers=$(cat $package_dir/modifiers 2> /dev/null;\
+							  fgrep -sl $package_dir */modifiers | cut -d/ -f1)
+			for i in modifiers; do
+				grep -qs "^$(echo $file | grepesc)$" $i/files.list && continue 2
+			done
+			files_to_remove="$files_to_remove $file"
+		done
+	fi
+	
+	local check=false
+	local file_list
+	# Create list of all possibly modified files
+	for i in $(fgrep -v [ $TMP_DIR/files.list); do
+		[ -e "$ROOT$i" ] || continue
+		[ -d "$ROOT$i" ] && continue
+		file_list="$file_list $i"
+		check=true
+	done
+	
+	# Check possibly modified files against other packages file.list
+	if $check; then
+		for pkg in $INSTALLED/*; do 
+		  	[ "$pkg" == "$package_name" ] && continue
+		  	[ -s $pkg/files.list ] || continue
+		  	
+		  	for file in $file_list; do
+		  		# $package_name wants to install $file which is already
+		  		# Installed from $pkg
+				if grep -q ^$file$ $pkg/files.list; then
+					# Tell $pkg that $package_name is going to overwrite some of it's files
+					if [ -s "$pkg/volatile.cpio.gz" ]; then
+						# We can modify backed up files without notice
+						zcat $pkg/volatile.cpio.gz | cpio -t --quiet | \
+						grep -q "^${file#/}$" && continue
+					fi
+					echo "$package_name" >> $pkg/modifiers
+				fi
+			done
+		done
+	fi
+	
+	pushd $TMP_DIR > /dev/null
+		cp receipt files.list $package_dir
+		# Copy the description if found.
+		[ -f "description.txt" ] && cp description.txt $package_dir
+		
+		# Pre install commands.
+		if grep -q ^pre_install $package_dir/receipt; then
+			pre_install $ROOT
+		fi
+		
+		# Handle Config Files from reciept
+		if [ -n "$CONFIG_FILES" ]; then
+			pushd $fs > /dev/null
+				# save 'official' configuration files
+				eval_gettext "Saving configuration files for \$package_name... "
+				
+				local confs
+				for i in $CONFIG_FILES; do
+					confs="$confs $(find ${i#/} -type f 2> /dev/null)"
+				done
+				
+				echo $confs | cpio -o -H newc --quiet | gzip -9 > $package_dir/volatile.cpio.gz
+		
+				# keep user configuration files
+				for conf_file in $confs; do
+					[ -e $conf_file ] || continue
+					cp -a $conf_file fs/$conf_file
+				done
+				status
+			popd > /dev/null
+		fi
+		
+		# Merge ROOT_FS with Package FS
+		eval_gettext "Installing \$package_name... "
+		cp -a fs/* $ROOT/
+		status
+		
+		# Remove old config files
+		if [ -n $files_to_remove ]; then
+			eval_gettext "Removing old \$package_name... "
+			for file in $files_to_remove; do
+				remove_with_path $ROOT$file
+			done
+			status
+		fi
+	popd > /dev/null
+	
+	# Remove the temporary directory.
+	gettext "Removing all tmp files... "
+	rm -rf $TMP_DIR
+	status
+	
+	# Post install commands.
+	if grep -q ^post_install $package_dir/receipt; then
+		post_install $ROOT
+	fi
+	
+ 	# Update-desktop-database if needed.
+	if [ "$(fgrep .desktop $package_dir/files.list | fgrep /usr/share/applications/)" ]; then
+		updatedesktopdb=yes
+	fi
+	# Update-mime-database if needed.
+	if [ "$(fgrep /usr/share/mime $package_dir/files.list)" ]; then
+		updatemimedb=yes
+	fi
+	# Update-icon-database
+	if [ "$(fgrep /usr/share/icon/hicolor $package_dir/files.list)" ]; then
+		updateicondb=yes
+	fi
+	# Compile glib schemas if needed.
+	if [ "$(fgrep /usr/share/glib-2.0/schemas $package_dir/files.list)" ]; then
+		compile_schemas=yes
+	fi
+	# Update depmod list
+	if [ "$(fgrep /lib/modules $package_dir/files.list)" ]; then
+		updatedepmod=yes
+	fi
+	
+	separator
+	eval_gettext "\$package_name (\$VERSION\$EXTRAVERSION) is installed."; newline
+	newline
+}
+
+
+# Install .tazpkg packages.
+# Parameters: package_file
+install_pkg() {
+	package_file="$1"
+	
+	check_root
+	check_valid_tazpkg $package_file
+	
+	# Check if forced install.
+	if ! [ "$forced" ]; then
+		check_for_installed_package $(package_name $package_file)
+	fi
+	
+	install_package $package_file
+	
+	update_desktop_database
+	update_mime_database
+	update_icon_database 
+	compile_glib_schemas
+}
+
+# Download and install a package. TODO: Handle Undigest Mirrors
+# Parameters: package_name
+get_install() {
+	local package_name="$1"
+
+	check_root
+	
+	# Check if get-Package
+	if ! is_package_mirrored $package_name; then
+		package_name="get-$package_name"
+		AUTOEXEC=true
+	fi
+
+	# Check if package is mirrored
+	if ! is_package_mirrored $package_name; then
+		gettext "Could not find \$package_name in repositories"; newline
+		exit 1
+	fi
+
+	# package_full=Package-Version
+	local package_full=$(full_package $package_name)
+	
+	# Check if forced install.
+	if ! [ "$forced" ]; then
+		check_for_installed_package $package_name
+	fi
+	
+	pushd $CACHE_DIR > /dev/null
+		if [ -f "$package_full.tazpkg" ]; then
+			eval_gettext "\$package_full is already in the cache : \$CACHE_DIR"; newline
+			# Check package download was finished
+			if ! tail -c 2k $package_full.tazpkg | fgrep -q 00000000TRAILER; then
+				eval_gettext "Continuing \$package_name download"; newline
+				download "$package_full.tazpkg"
+			fi
+			
+			# Check that the package has the correct checksum
+#			if [ "$($CHECKSUM $package_full.tazpkg)" != "$(fgrep \"  $package_full.tazpkg\" $pkgsmd5)" ]; then
+#				rm -f $package.tazpkg
+#				download "$package_full.tazpkg"
+#			fi
+		else
+			newline 
+			download "$package_full.tazpkg"
+		fi
+	popd > /dev/null
+	
+	install_package "$CACHE_DIR/$package_full.tazpkg"
+	
+	[ -n "$AUTOEXEC" ] && $package_name $ROOT 
+	update_desktop_database
+	update_mime_database
+}
+
+# Install all missing deps. Auto install or ask user then install all missing 
+# deps from local dir, cdrom, media or from the mirror. In case we want to
+# install packages from local, we need a packages.list to find the version.
+# Parameters: package List of deps to install
+install_deps() {
+	local package=$1
+	shift
+	local deps="$@"
+	
+	gettext "Install all missing dependencies? "
+	
+	# Print Yes/No and get result
+	if $AUTO_INSTALL_DEPS || confirm; then
+		for pkgorg in $deps; do
+			local pkg=$(equivalent_pkg $pkgorg)
+			# Check if package is not installed
+			if [ ! -d "$installed/$pkg" ]; then
+				if [ ! -f "$PKGS_DB/packages.list" ]; then
+					tazpkg recharge
+				fi
+				get-install $pkg
+			fi
+		done
+	else
+		newline
+		eval_gettext \
+"Leaving dependencies for \$package unresolved. The package is installed but
+will probably not work."; newline
+		newline
+	fi
+}
+
+# Check for ELF file
+is_elf() {
+	[ "$(dd if=$1 bs=1 skip=1 count=3 2> /dev/null)" = "ELF" ]
+}
+
+# Print shared library dependencies
+ldd() {
+	LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so $1 2> /dev/null
+}
+
+
+update_desktop_database() {
+	if [ -f $ROOT/usr/bin/update-desktop-database ] && [ -n "$updatedesktopdb" ]; then
+		chroot "$ROOT/" /usr/bin/update-desktop-database /usr/share/applications 2>/dev/null
+	fi
+}
+
+update_mime_database() {
+	if [ -f $ROOT/usr/bin/update-mime-database ] && [ -n "$updatemimedb" ]; then
+		chroot "$ROOT/" /usr/bin/update-mime-database /usr/share/mime
+	fi
+}
+
+update_icon_database() {
+	if [ -f $ROOT/usr/bin/gtk-update-icon-cache ] && [ -n "$updateicondb" ]; then
+		chroot "$ROOT/" /usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor
+	fi
+}
+
+compile_glib_schemas() {
+	if [ -f $ROOT/usr/bin/glib-compile-schemas ] && [ -n "$compile_schemas" ]; then
+		chroot "$ROOT/" /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+	fi
+}
+
+update_kernel_modules() {
+	if [ -f $ROOT/sbin/depmod ] && [ -n "$updatedepmod" ]; then
+		chroot "$ROOT/" /sbin/depmod -a
+	fi
+}
+
+case $1 in
+	install|-i)
+		install_pkg $2 $3 ;;
+	get-install|-gi)
+		get_install $2 ;;
+	*)
+		usage ;;
+esac
