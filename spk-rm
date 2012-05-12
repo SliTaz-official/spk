@@ -18,40 +18,49 @@ usage() {
 	name=$(basename $0)
 	cat << EOT
 
-$(boldify $(gettext "Usage:")) [package|--option] [pkg2 ... pkgN|--opt2]
+$(boldify $(gettext "Usage:")) $name [packages|--options]
 
 $(boldify $(gettext "Options:"))
 
 $(boldify $(gettext "Examples:"))
+  $name nano clex leafpad
+  $name nano clex --confirm
 
 EOT
 	exit 0
 }
 
 #
-# Commands
+# Commands and exit
 #
 
 case "$1" in
-	"") usage ;;
-	*)
-		count=0
-		for pkg in $@
-		do
-			[ -d "$installed/$pkg" ] || continue
-			count=$(($count + 1))
-			[ "$count" == 1 ] && echo ""
-			gettext "Removing"; echo " $pkg"
-			separator
-			# Handle --confirm
-			if [ "$confirm" ]; then
-				gettext "Confirm uninstalltion of:"; echo " $pkg"
-				if ! yes_no; then
-						gettext "Uninstallation canceled"
-						echo -e "\n" && exit 0 ;;
-				fi
-			fi
-			gettext "TODO"; echo
-		done ;;
+	""|usage|help) usage && exit 0 ;;
 esac
+
+#
+# Handle packages
+#
+
+count=0
+check_root
+
+for pkg in $@
+do
+	[ -d "$installed/$pkg" ] || continue
+	count=$(($count + 1))
+	[ "$count" == 1 ] && echo ""
+	gettext "Removing"; echo " $pkg"
+	separator
+	# Handle --confirm
+	if [ "$confirm" ]; then
+		gettext "Confirm uninstallation of"; echo -n " $pkg:"
+		if ! confirm; then
+			gettext "Uninstallation canceled"
+			echo -e "\n" && exit 0
+		fi
+	fi
+	gettext "TODO"; echo
+done
+
 exit 0

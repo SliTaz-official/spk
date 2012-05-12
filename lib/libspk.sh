@@ -15,7 +15,8 @@ mirrorurl="$PKGS_DB/mirror"
 installed="$PKGS_DB/installed"
 pkgsdesc="$PKGS_DB/packages.desc"
 pkgsmd5="$PKGS_DB/packages.md5"
-blocked="$PKGS_DB/blocked-packages.list"
+blocked="$PKGS_DB/blocked.list"
+activity="$PKGS_DB/activity"
 
 #
 # Functions
@@ -86,10 +87,10 @@ missing_deps() {
 	local package="$1"
 	shift 1
 	local depends="$@"
-	
+
 	local deps=0
 	local missing
-	
+
 	#Calculate missing dependencies
 	for pkgorg in $depends; do
 		local pkg=$(equivalent_pkg $pkgorg)
@@ -100,9 +101,9 @@ missing_deps() {
 			gettext "WARNING Dependency loop between \$package and \$pkg."; newline
 		fi
 	done
-	
+
 	gettext "\$deps missing package(s) to install."; newline
-	
+
 	# Return true if missing deps
 	[ "$deps" != "0" ]
 }
