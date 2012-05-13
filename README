@@ -2,34 +2,34 @@ SliTaz Spk
 ================================================================================
 
 
-The SliTaz Spk toolset provide tools and utils to handle SliTaz packages.
+The SliTaz Spk toolset provides tools and utils to handle SliTaz packages.
 
 
 Spk
 -------------------------------------------------------------------------------
 Spk is the main tool to handle and play with SliTaz packages, it handles multiple
-packages on cmdline and a wide range of --options which will perform tasks such
+packages on a cmdline and a wide range of --options which will perform tasks such
 as adding or removing packages using the toolset. Spk itself provides some small
 commands such as ls or info.
 
 
 Toolset
 -------------------------------------------------------------------------------
-Spk is separated in many small tools following the UNIX philosophy: one tool for
-one task but do that task well. Here is a list of proposal tools and ther
+Spk is separated into many small tools following the UNIX philosophy: one tool 
+for one task but do that task well. Here is a list of proposed tools and their
 functions:
 
 	* spk-add    : Install local or online pkgs
 	* spk-rm     : Remove packages: confirm in option ?
-	* spk-up     : Upgrade the all system
+	* spk-up     : Upgrade the whole system
 	* spk-search : Search for packages or files
-	* spk-archive: Manage pacakge extraction, compression, and packing
+	* spk-archive: Manage package extraction, compression, and packing
 	* spk-mirror : Manage mirrors and undigest
 
 
 LibSpk
 -------------------------------------------------------------------------------
-Libspk provide base function and internal variables used my almost all spk-tools.
+Libspk provides base functions and internal variables used by almost all spk-tools.
 
 	* Source: libtaz.sh, libpkg.sh, slitaz.conf
 	* Internal Spk variables (lowercase, not configurable)
@@ -39,7 +39,7 @@ Libspk provide base function and internal variables used my almost all spk-tools
 
 Devnotes
 -------------------------------------------------------------------------------
-Some random and usefull notes.
+Some random and useful notes.
 
 	* packages.desc format: package | 1.0 | desc | category | website
 	* packages.md5 format : de9f76250657000958ee0120d376613e  package-1.0.tazpkg
@@ -59,11 +59,11 @@ Coding style
 --------------------------------------------------------------------------------
 Here are the spk coding style notes, follow them if you want your code included
 in the package. These rules are in addition to cookutils coding style, please
-read also cookutils/README
+also read cookutils/README
 
 
-    * No bash, be Busybox Ash compatible
-    * Use libtaz.sh, slitaz.conf and libpkg.sh
+	* No bash, be Busybox Ash compatible
+	* Use libtaz.sh, slitaz.conf and libpkg.sh
 	* ...
 
 ================================================================================

@@ -2,7 +2,7 @@
 #
 # Authors : See the AUTHORS files
 
-# Set to / for now untill we add installing to chroot support
+# Set to / for now until we add installing to chroot support
 # Could we update tools so they do not need this?
 ROOT=""
 TMP_DIR="/tmp/$RANDOM"
@@ -92,7 +92,7 @@ install_package() {
 		  		# $package_name wants to install $file which is already
 		  		# Installed from $pkg
 				if grep -q ^$file$ $pkg/files.list; then
-					# Tell $pkg that $package_name is going to overwrite some of it's files
+					# Tell $pkg that $package_name is going to overwrite some of its files
 					if [ -s "$pkg/volatile.cpio.gz" ]; then
 						# We can modify backed up files without notice
 						zcat $pkg/volatile.cpio.gz | cpio -t --quiet | \
@@ -114,7 +114,7 @@ install_package() {
 			pre_install $ROOT
 		fi
 		
-		# Handle Config Files from reciept
+		# Handle Config Files from receipt
 		if [ -n "$CONFIG_FILES" ]; then
 			pushd $fs > /dev/null
 				# save 'official' configuration files

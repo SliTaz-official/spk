@@ -56,7 +56,7 @@ do
 	if [ "$confirm" ]; then
 		gettext "Confirm uninstallation of"; echo -n " $pkg:"
 		if ! confirm; then
-			gettext "Uninstallation canceled"
+			gettext "Uninstallation cancelled"
 			echo -e "\n" && exit 0
 		fi
 	fi

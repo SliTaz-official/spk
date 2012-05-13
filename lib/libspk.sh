@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Libspk - The Spk base function and internal variables used my almost all
+# Libspk - The Spk base function and internal variables used by almost all
 # spk-tools. Read the README before adding or modifing any code in spk!
 #
 # Copyright (C) SliTaz GNU/Linux - BSD License
@@ -24,7 +24,7 @@ activity="$PKGS_DB/activity"
 
 
 # Display receipt information.
-# Expects a reciept to be sourced
+# Expects a receipt to be sourced
 receipt_info() {
 	cat << EOT
 $(gettext "Version    :") ${VERSION}${EXTRAVERSION}
@@ -137,7 +137,7 @@ missing_deps() {
 	local deps=0
 	local missing
 
-	#Calculate missing dependencies
+	# Calculate missing dependencies
 	for pkgorg in $depends; do
 		local pkg=$(equivalent_pkg $pkgorg)
 		if [ ! -d "$installed/$pkg" ]; then
