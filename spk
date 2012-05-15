@@ -74,7 +74,7 @@ esac
 # Handle packages: spk package1 ... packageN
 #
 
-[ "$debug" ] && echo "DEBUG: cmdline: $0 $@"
+debug "cmdline: $0 $@"
 count=0
 
 for pkg in $@
