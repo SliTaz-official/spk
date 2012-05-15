@@ -96,8 +96,8 @@ full_package() {
 }
 
 # Check if a package is already installed.
-# Parameters: package
-check_for_installed_package() {
+# Usage: check_installed package
+check_installed() {
 	local name="$1"
 	if [ -d "$installed/$name" ]; then
 		echo $(boldify "$name") $(gettext "package is already installed.")
@@ -165,3 +165,7 @@ grepesc() {
 	sed 's/\[/\\[/g'
 }
 
+# Check for ELF file
+is_elf() {
+	[ "$(dd if=$1 bs=1 skip=1 count=3 2> /dev/null)" = "ELF" ]
+}

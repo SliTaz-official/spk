@@ -1,4 +1,4 @@
-#!/bin/busybox sh
+#!/bin/sh
 #
 # Spk-add - Install SliTaz packages. Read the README before adding or
 # modifing any code in spk!
@@ -40,6 +40,7 @@ EOT
 install_package() {
 	local package_file=$1
 
+	# Never used I think!!!
 	# Set by receipt: pre_depends() DEPENDS SELF_INSTALL CONFIG_FILES post_install()
 
 	# Create package path early to avoid dependencies loop
@@ -57,8 +58,9 @@ install_package() {
 	fi
 
 	# Create modifiers and files.list if they do not exist
-#	touch $package_dir/modifiers
-#	touch $package_dir/files.list
+	# Why ? If missing files.list it's meta packages.
+	#touch $package_dir/modifiers
+	#touch $package_dir/files.list
 
 	# Add package checksum to pkgsmd5
 	sed -i "/ $(basename $package_dir)$/d" $pkgsmd5 2> /dev/null
@@ -214,22 +216,19 @@ install_package() {
 	newline
 }
 
-
 # Install .tazpkg packages.
 # Parameters: package_file
 install_pkg() {
 	package_file="$1"
-
 	check_root
 	check_valid_tazpkg $package_file
 
 	# Check if forced install.
 	if ! [ "$forced" ]; then
-		check_for_installed_package $(package_name $package_file)
+		check_installed $(package_name $package_file)
 	fi
 
 	install_package $package_file
-
 	update_desktop_database
 	update_mime_database
 	update_icon_database
@@ -260,7 +259,7 @@ get_install() {
 
 	# Check if forced install.
 	if ! [ "$forced" ]; then
-		check_for_installed_package $package_name
+		check_installed $package_name
 	fi
 
 	cd $CACHE_DIR > /dev/null
@@ -273,10 +272,10 @@ get_install() {
 		fi
 
 		# Check that the package has the correct checksum
-#			if [ "$($CHECKSUM $package_full.tazpkg)" != "$(fgrep \"  $package_full.tazpkg\" $pkgsmd5)" ]; then
-#				rm -f $package.tazpkg
-#				download "$package_full.tazpkg"
-#			fi
+#		if [ "$($CHECKSUM $package_full.tazpkg)" != "$(fgrep \"  $package_full.tazpkg\" $pkgsmd5)" ]; then
+#			rm -f $package.tazpkg
+#			download "$package_full.tazpkg"
+#		fi
 	else
 		newline
 		download "$package_full.tazpkg"
@@ -314,24 +313,14 @@ install_deps() {
 		done
 	else
 		newline
-		eval_gettext \
-"Leaving dependencies for \$package unresolved. The package is installed but
-will probably not work."; newline
-		newline
+		boldify $(gettext "Package:") $package
+		gettext \
+			"Dependencies unresolved. Installed but will probably not work."
+		newline && newline
 	fi
 }
 
-# Check for ELF file
-is_elf() {
-	[ "$(dd if=$1 bs=1 skip=1 count=3 2> /dev/null)" = "ELF" ]
-}
-
-# Print shared library dependencies: we have /usr/bin/ldd
-ldd() {
-	LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so $1 2> /dev/null
-}
-
-
+# Update system databases
 update_desktop_database() {
 	if [ -f $ROOT/usr/bin/update-desktop-database ] && [ -n "$updatedesktopdb" ]; then
 		chroot "$ROOT/" /usr/bin/update-desktop-database /usr/share/applications 2>/dev/null
