@@ -9,7 +9,6 @@
 #. /usr/lib/slitaz/libspk.sh
 . lib/libspk.sh
 
-
 tmpdir="/tmp/$RANDOM"
 
 #
@@ -86,10 +85,10 @@ install_package() {
 	#touch $package_dir/modifiers
 	#touch $package_dir/files.list
 
-	# Add package checksum to pkgsmd5
-	sed -i "/ $(basename $package_dir)$/d" $pkgsmd5 2> /dev/null
+	# Add package checksum to $installed.$SUM
+	sed -i "/ $(basename $package_dir)$/d" $installed.$SUM 2> /dev/null
 	cd $(dirname $package_file) || exit 1
-	$CHECKSUM $(basename $package_file) >> $pkgsmd5
+	$CHECKSUM $(basename $package_file) >> $installed.$SUM
 	cd - >/dev/null
 
 	# Resolve package deps.
