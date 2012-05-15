@@ -21,13 +21,136 @@ usage() {
 $(boldify $(gettext "Usage:")) $name [packages|--options]
 
 $(boldify $(gettext "Options:"))
+  --confirm   $(gettext "Ask before removing any packages")
+  --verbose   $(gettext "Be more verbose when removing files")
 
 $(boldify $(gettext "Examples:"))
-  $name nano clex leafpad
-  $name nano clex --confirm
+  $name package1 package2 packagesN
+  $name package1 --confirm --verbose
 
 EOT
 	exit 0
+}
+
+# Avoid dirname errors by checking for argument anf then remove file and
+# empty directory. Usage: remove_file file
+remove_file() {
+	[ "$1" ] || return
+	local dir
+	rm -f $1 2>/dev/null
+	dir="$1"
+	while [ "$dir" != "/" ]; do
+		dir="$(dirname $dir)"
+		rmdir $dir 2> /dev/null || break
+	done
+}
+
+# Remove a single package
+remove() {
+	altered=""
+	for i in $(cd ${root}${installed} ; ls); do
+		[ -f ${root}${installed}/$i/receipt ] || continue
+		unset_receipt
+		. ${root}${installed}/$i/receipt
+		case " $(echo $DEPENDS) " in
+			*\ $pkg\ *) altered="$altered $i" ;;
+		esac
+	done
+	unset_receipt
+	. ${root}${installed}/$pkg/receipt
+
+	if [ -n "$altered" ]; then
+		eval_gettext "The following packages depend on \$PACKAGE:"; echo
+		for i in $altered; do
+			echo "  $i"
+		done
+	fi
+	refresh=$(cd ${root}${installed} ; grep -sl ^$PACKAGE$ */modifiers)
+	if [ -n "$refresh" ]; then
+		eval_gettext "The following packages have been modified by \$PACKAGE:"; echo
+		for i in $refresh; do
+			echo "  ${i%/modifiers}"
+		done
+	fi
+
+	# Do we have packages depending on $pkg ?
+	if [ "$altered" ]; then
+		if [ "$confirm" ]; then
+			gettext "Remove packages depending on:"; echo -n " $PACKAGE"
+			if ! confirm; then
+				gettext "Keeping packages depending on:"; echo " $PACKAGE"
+				echo -e "\n" && continue
+			fi
+		fi
+		for i in $altered; do
+			if [ -d "${root}${installed}/$i" ]; then
+				# TODO: use spk-rm
+				echo "tazpkg remove $i --root=$root"
+			fi
+		done
+	fi
+
+	# Handle pre_remove
+	if grep -q ^pre_remove ${root}${installed}/$PACKAGE/receipt; then
+		pre_remove $root
+	fi
+
+	# Remove all files
+	gettext "Removing all installed files..."
+	[ "$verbose" ] && newline
+	if [ -f ${root}${installed}/$PACKAGE/modifiers ]; then
+	    for file in `cat ${root}${installed}/$PACKAGE/files.list`
+	    do
+			for mod in `cat ${root}${installed}/$PACKAGE/modifiers`
+			do
+				[ -f ${root}${installed}/$mod/files.list ] && \
+					[ $(grep "^$(echo $file | grepesc)$" ${root}${installed}/$mod/files.list | wc -l) -gt 1 ] \
+					&& continue 2
+			done
+			[ "$verbose" ] && gettext "Removing:"; echo -n " ${root}${file}"
+			remove_file ${root}${file}
+	    done
+	else
+		for file in $(cat ${root}${installed}/$PACKAGE/files.list)
+		do
+			[ "$verbose" ] && gettext "Removing:"; echo -n " ${root}${file}"
+			remove_file ${root}${file}
+			[ "$verbose" ] && status
+		done
+	fi
+	[ "$verbose" ] || status
+
+	# Handle post_remove
+	if grep -q ^post_remove ${root}${installed}/$PACKAGE/receipt; then
+		post_remove $root
+	fi
+
+	# Remove package receipt.
+	gettext "Removing package receipt..."
+	rm -rf ${root}${installed}/$PACKAGE
+	status
+	sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION$/d" \
+		${root}${PKGS_DB}/installed.$SUM 2> /dev/null
+
+	# Mofified ?
+	if [ "$refresh" ]; then
+		if [ "$confirm" ]; then
+			gettext "Reinstall packages modified by:"; echo " $PACKAGE"
+			if ! confirm; then
+				gettext "Keeping packages modified by:"; echo " $PACKAGE"
+				echo -e "\n" && continue
+			fi
+		fi
+		for i in $refresh; do
+			if [ $(wc -l < ${root}${installed}/$i) -gt 1 ]; then
+				gettext "For reinstallation check:"; echo " $installed/$i"
+				continue
+			fi
+			# TODO: use spk-add
+			rm -r ${root}${installed}/$i
+			tazpkg -gi ${i%/modifiers} --forced --root=$root
+		done
+	fi
 }
 
 #
@@ -35,7 +158,7 @@ EOT
 #
 
 case "$1" in
-	""|usage|help) usage && exit 0 ;;
+	""|usage|help) usage ;;
 esac
 
 #
@@ -47,20 +170,31 @@ check_root
 
 for pkg in $@
 do
-	[ -d "$installed/$pkg" ] || continue
+	# Skip options
+	case "$pkg" in
+		--*) continue
+	esac
+	# Be sure package is installed
+	if [ ! -f "${root}${installed}/$pkg/receipt" ]; then
+		echo -n "$(boldify "$pkg") "
+		gettext "package is not installed"; newline
+		continue
+	fi
 	count=$(($count + 1))
-	[ "$count" == 1 ] && echo ""
-	gettext "Removing"; echo " $pkg"
+	[ "$count" == 1 ] && newline
+	boldify $(gettext "Removing"; echo " $pkg")
 	separator
 	# Handle --confirm
 	if [ "$confirm" ]; then
 		gettext "Confirm uninstallation of"; echo -n " $pkg:"
 		if ! confirm; then
 			gettext "Uninstallation cancelled"
-			echo -e "\n" && exit 0
+			echo -e "\n" && continue
 		fi
 	fi
-	gettext "TODO"; echo
+	remove
+	separator
+	echo "" && log "Removed package: $pkg"
 done
 
 exit 0
