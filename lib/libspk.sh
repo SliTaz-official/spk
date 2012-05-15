@@ -11,6 +11,7 @@
 . /etc/slitaz/slitaz.conf
 
 # Internal variables.
+# We should have ${root}/$PKGS_DB ???
 mirrorurl="$PKGS_DB/mirror"
 installed="$PKGS_DB/installed"
 pkgsdesc="$PKGS_DB/packages.desc"
@@ -22,9 +23,7 @@ activity="$PKGS_DB/activity"
 #
 # Functions
 
-
-# Display receipt information.
-# Expects a receipt to be sourced
+# Display receipt information. Expects a receipt to be sourced
 receipt_info() {
 	cat << EOT
 $(gettext "Version    :") ${VERSION}${EXTRAVERSION}
@@ -38,7 +37,6 @@ EOT
 extract_receipt() {
 	local dir="$1"
 	local file="$2"
-
 	pushd "$dir" > /dev/null
 	{ cpio --quiet -i receipt > /dev/null 2>&1; } < $file
 	popd > /dev/null
@@ -46,7 +44,7 @@ extract_receipt() {
 
 # Used by: list
 count_installed() {
-	local count=$(ls $installed | wc -l)
+	local count=$(ls ${root}${installed} | wc -l)
 	gettext "Installed packages"; echo ": $count"
 }
 
@@ -57,8 +55,8 @@ count_mirrored() {
 }
 
 is_package_mirrored() {
-	local package_name=$1
-	local occurance=$(cat $pkgsdesc | grep "$package_name ")
+	local name=$1
+	local occurance=$(cat $pkgsdesc | grep "$name ")
 	[ -n "$occurance" ]
 }
 
@@ -70,20 +68,19 @@ download() {
 	case "$package" in
 		*.tazpkg)
 			echo "${mirror%/}/$package"
-			wget -c ${mirror%/}/$package ;; 
+			wget -c ${mirror%/}/$package ;;
 	esac
 }
 
 # Assume package_name is valid
 # There may be a more efficient way to do this...
 full_package() {
-	local package_name=$1
-	local occurance=$(cat $pkgsdesc | grep "$package_name ")
+	local name=$1
+	local occurance=$(cat $pkgsdesc | grep "$name ")
 	local count=0
 	for i in $(echo $occurance | tr "|" "\n"); do
 		if [ $count -eq 1 ]; then
-			echo $package_name-$i
-			return
+			echo $name-$i && return
 		fi
 		count=$(($count+1))
 	done
@@ -92,31 +89,30 @@ full_package() {
 # Check if a package is already installed.
 # Parameters: package
 check_for_installed_package() {
-	local package_name="$1"
-	
-	if [ -d "$installed/$package_name" ]; then
+	local name="$1"
+	if [ -d "${root}${installed}/$name" ]; then
 		newline
-		echo $package_name $(gettext "package is already installed.")
+		echo $name $(gettext "package is already installed.")
 		exit 0
 	fi
 }
 
 # get an already installed package from packages.equiv  TODO REDO!
 equivalent_pkg() {
-	for i in $(grep -hs "^$1=" $PKGS_DB/packages.equiv \
-		   $PKGS_DB/undigest/*/packages.equiv | sed "s/^$1=//")
+	for i in $(grep -hs "^$1=" ${root}${PKGS_DB}/packages.equiv \
+		   ${root}${PKGS_DB}/undigest/*/packages.equiv | sed "s/^$1=//")
 	do
 		if echo $i | fgrep -q : ; then
 			# format 'alternative:newname'
 			# if alternative is installed then substitute newname
-			if [ -f $installed/${i%:*}/receipt ]; then
+			if [ -f ${root}${installed}/${i%:*}/receipt ]; then
 				# substitute package dependancy
 				echo ${i#*:}
 				return
 			fi
 		else
 			# if alternative is installed then nothing to install
-			if [ -f $installed/$i/receipt ]; then
+			if [ -f ${root}${installed}/$i/receipt ]; then
 				# substitute installed package
 				echo $i
 				return
@@ -140,17 +136,17 @@ missing_deps() {
 	# Calculate missing dependencies
 	for pkgorg in $depends; do
 		local pkg=$(equivalent_pkg $pkgorg)
-		if [ ! -d "$installed/$pkg" ]; then
+		if [ ! -d "${root}${installed}/$pkg" ]; then
 			gettext "Missing: \$pkg"; newline
 			deps=$(($deps+1))
-		elif [ ! -f "$installed/$pkg/receipt" ]; then
+		elif [ ! -f "${root}${installed}/$pkg/receipt" ]; then
 			gettext "WARNING Dependency loop between \$package and \$pkg."; newline
 		fi
 	done
 	if [ $deps -gt 0 ]; then
 		echo $deps $(gettext "missing package(s) to install.")
 	fi
-	
+
 	gettext "\$deps missing package(s) to install."; newline
 
 	# Return true if missing deps
