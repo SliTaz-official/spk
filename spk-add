@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/busybox sh
 #
 # Spk-add - Install SliTaz packages. Read the README before adding or
 # modifing any code in spk!
