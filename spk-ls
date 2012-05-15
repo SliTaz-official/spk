@@ -25,13 +25,14 @@ $(boldify $(gettext "Options:"))
   --count     $(gettext "Display the number of installed packages")
   --mirror    $(gettext "List all the packages on mirror")
   --blocked   $(gettext "List all blocked packages")
-  --short     ls: $(gettext "Short list of installed packages")
+  --short     $(gettext "Short list of installed packages")
   --root      $(gettext "Set the root file system path")
+  --color=NB  $(gettext "Set package name color in list")
   --debug     $(gettext "Display some usefull debug information")
 
 $(boldify $(gettext "Examples:"))
   $name package1 package2 packageN
-  $name --count
+  $name --short --color=33
 
 EOT
 	exit 0
@@ -53,13 +54,13 @@ do
 			IFS="|"
 			cat $pkgsdesc | while read package version desc category
 			do
-				echo ""
-				gettext "Package    :"; echo " $package"
+				newline
+				gettext "Package    :"; colorize " $package" 32
 				gettext "Version    :"; echo "$version"
 				gettext "Short desc :"; echo "$desc"
 			done && unset IFS
 			separator
-			count_mirrored
+			boldify $(count_mirrored)
 			echo "" && exit 0 ;;
 		--blocked)
 			if [ -f "$blocked" ]; then
@@ -68,9 +69,17 @@ do
 				gettext "No blocked packages"; echo ""
 			fi && exit 0 ;;
 		--short)
-			ls -1 $installed
+			newline
+			boldify "$(gettext "Installed packages")"
+			separator
+			for pkg in $(ls -1 $installed)
+			do
+				. $installed/$pkg/receipt
+				echo -n "$(colorize "$pkg" 32)"; indent 28 " $VERSION"
+			done
+			separator
 			boldify $(count_installed)
-			exit 0 ;;
+			newline && exit 0 ;;
 		--*) continue ;;
 		*)
 			# List installed files by the package.
@@ -106,9 +115,9 @@ do
 	. $pkg/receipt
 	count=$(($count + 1))
 	[ "$count" != 1 ] && newline
-	gettext "Package    :"; echo " $PACKAGE"
+	gettext "Package    :"; colorize " $PACKAGE" 32
 	receipt_info
 done
 separator
-count_installed && newline
+boldify $(count_installed) && newline
 exit 0

@@ -65,11 +65,6 @@ case "$1" in
 		cat $activity
 		separator && newline
 		exit 0 ;;
-	ls|add)
-		# Sort of helper on wrong commands or --option ? Or have better
-		# usage/help: spk help [command] ?
-		gettext "Did you mean ?"; echo " spk-$@"
-		exit 0 ;;
 esac
 
 #
@@ -121,7 +116,7 @@ do
 		. $installed/$pkg/receipt
 		boldify "$(gettext "Package") $pkg"
 		separator
-		gettext "Status     : installed"; newline
+		gettext "Status     :"; colorize " installed" 32
 		receipt_info
 		separator && newline
 		continue
@@ -139,7 +134,7 @@ do
 		[ "$count" == 1 ] && newline
 		boldify "$(gettext "Package") $pkg"
 		separator
-		gettext "Status     : not installed"; echo ""
+		gettext "Status     :"; colorize " not installed" 31
 		echo "$mirrored" | awk 'BEGIN { FS = "|" } ; { print \
 			"Version    :" $2 "\n" \
 			"Short desc :" $3 "\n" \
