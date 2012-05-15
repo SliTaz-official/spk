@@ -11,14 +11,13 @@
 . /etc/slitaz/slitaz.conf
 
 # Internal variables.
-# We should have ${root}/$PKGS_DB ???
-mirrorurl="$PKGS_DB/mirror"
-installed="$PKGS_DB/installed"
-pkgsdesc="$PKGS_DB/packages.desc"
-pkgsmd5="$PKGS_DB/packages.md5"
+mirrorurl="${root}${PKGS_DB}/mirror"
+installed="${root}${PKGS_DB}/installed"
+pkgsdesc="${root}${PKGS_DB}/packages.desc"
+pkgsmd5="${root}${PKGS_DB}/packages.md5"
 # ????do we need packages.equiv????
-blocked="$PKGS_DB/blocked-packages.list"
-activity="$PKGS_DB/activity"
+blocked="${root}${PKGS_DB}/blocked-packages.list"
+activity="${root}${PKGS_DB}/activity"
 
 #
 # Functions

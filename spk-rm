@@ -6,7 +6,8 @@
 # Copyright (C) SliTaz GNU/Linux - BSD License
 # Author: See AUTHORS files
 #
-. /usr/lib/slitaz/libspk.sh
+#. /usr/lib/slitaz/libspk.sh
+. lib/libspk.sh
 
 #
 # Functions
@@ -23,6 +24,7 @@ $(gettext "Remove installed packages and ther dependencies")
 
 $(boldify $(gettext "Options:"))
   --confirm   $(gettext "Ask before removing any packages")
+  --root      $(gettext "Set the root file system path")
   --verbose   $(gettext "Be more verbose when removing files")
 
 $(boldify $(gettext "Examples:"))
@@ -49,16 +51,16 @@ remove_file() {
 # Remove a single package
 remove() {
 	altered=""
-	for i in $(cd ${root}${installed} ; ls); do
-		[ -f ${root}${installed}/$i/receipt ] || continue
+	for i in $(cd $installed ; ls); do
+		[ -f $installed/$i/receipt ] || continue
 		unset_receipt
-		. ${root}${installed}/$i/receipt
+		. $installed/$i/receipt
 		case " $(echo $DEPENDS) " in
 			*\ $pkg\ *) altered="$altered $i" ;;
 		esac
 	done
 	unset_receipt
-	. ${root}${installed}/$pkg/receipt
+	. $installed/$pkg/receipt
 
 	if [ -n "$altered" ]; then
 		eval_gettext "The following packages depend on \$PACKAGE:"; echo
@@ -66,7 +68,7 @@ remove() {
 			echo "  $i"
 		done
 	fi
-	refresh=$(cd ${root}${installed} ; grep -sl ^$PACKAGE$ */modifiers)
+	refresh=$(cd $installed ; grep -sl ^$PACKAGE$ */modifiers)
 	if [ -n "$refresh" ]; then
 		eval_gettext "The following packages have been modified by \$PACKAGE:"; echo
 		for i in $refresh; do
@@ -84,7 +86,7 @@ remove() {
 			fi
 		fi
 		for i in $altered; do
-			if [ -d "${root}${installed}/$i" ]; then
+			if [ -d "$installed/$i" ]; then
 				# TODO: use spk-rm
 				echo "tazpkg remove $i --root=$root"
 			fi
@@ -92,43 +94,43 @@ remove() {
 	fi
 
 	# Handle pre_remove
-	if grep -q ^pre_remove ${root}${installed}/$PACKAGE/receipt; then
+	if grep -q ^pre_remove $installed/$PACKAGE/receipt; then
 		pre_remove $root
 	fi
 
 	# Remove all files
 	gettext "Removing all installed files..."
 	[ "$verbose" ] && newline
-	if [ -f ${root}${installed}/$PACKAGE/modifiers ]; then
-	    for file in `cat ${root}${installed}/$PACKAGE/files.list`
+	if [ -f $installed/$PACKAGE/modifiers ]; then
+	    for file in `cat $installed/$PACKAGE/files.list`
 	    do
-			for mod in `cat ${root}${installed}/$PACKAGE/modifiers`
+			for mod in `cat $installed/$PACKAGE/modifiers`
 			do
-				[ -f ${root}${installed}/$mod/files.list ] && \
-					[ $(grep "^$(echo $file | grepesc)$" ${root}${installed}/$mod/files.list | wc -l) -gt 1 ] \
+				[ -f $installed/$mod/files.list ] && \
+					[ $(grep "^$(echo $file | grepesc)$" $installed/$mod/files.list | wc -l) -gt 1 ] \
 					&& continue 2
 			done
-			[ "$verbose" ] && gettext "Removing:"; echo -n " ${root}${file}"
+			[ "$verbose" ] && (gettext "Removing:"; echo -n " ${root}${file}")
 			remove_file ${root}${file}
 	    done
 	else
-		for file in $(cat ${root}${installed}/$PACKAGE/files.list)
+		for file in $(cat $installed/$PACKAGE/files.list)
 		do
-			[ "$verbose" ] && gettext "Removing:"; echo -n " ${root}${file}"
+			[ "$verbose" ] && (gettext "Removing:"; echo -n " ${root}${file}")
 			remove_file ${root}${file}
 			[ "$verbose" ] && status
 		done
 	fi
-	[ "$verbose" ] || status
+	[ ! "$verbose" ] && status
 
 	# Handle post_remove
-	if grep -q ^post_remove ${root}${installed}/$PACKAGE/receipt; then
+	if grep -q ^post_remove $installed/$PACKAGE/receipt; then
 		post_remove $root
 	fi
 
 	# Remove package receipt.
 	gettext "Removing package receipt..."
-	rm -rf ${root}${installed}/$PACKAGE
+	rm -rf $installed/$PACKAGE
 	status
 	sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION$/d" \
 		${root}${PKGS_DB}/installed.$SUM 2> /dev/null
@@ -143,12 +145,12 @@ remove() {
 			fi
 		fi
 		for i in $refresh; do
-			if [ $(wc -l < ${root}${installed}/$i) -gt 1 ]; then
+			if [ $(wc -l < $installed/$i) -gt 1 ]; then
 				gettext "For reinstallation check:"; echo " $installed/$i"
 				continue
 			fi
 			# TODO: use spk-add
-			rm -r ${root}${installed}/$i
+			rm -r $installed/$i
 			tazpkg -gi ${i%/modifiers} --forced --root=$root
 		done
 	fi
@@ -176,7 +178,7 @@ do
 		--*) continue
 	esac
 	# Be sure package is installed
-	if [ ! -f "${root}${installed}/$pkg/receipt" ]; then
+	if [ ! -f "$installed/$pkg/receipt" ]; then
 		echo -n "$(boldify "$pkg") "
 		gettext "package is not installed"; newline
 		continue
@@ -185,6 +187,7 @@ do
 	[ "$count" == 1 ] && newline
 	boldify $(gettext "Removing"; echo " $pkg")
 	separator
+	[ "$verbose" ] && echo "DB: $installed"
 	# Handle --confirm
 	if [ "$confirm" ]; then
 		gettext "Confirm uninstallation of"; echo -n " $pkg:"
