@@ -149,7 +149,6 @@ remove() {
 				gettext "For reinstallation check:"; echo " $installed/$i"
 				continue
 			fi
-			# TODO: use spk-add
 			rm -r $installed/$i
 			spk-add ${i%/modifiers} --forced --root=$root
 		done

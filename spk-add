@@ -114,15 +114,16 @@ install_package() {
 	if [ -f $package_dir/files.list ]; then
 		for file in $(cat $package_dir/files.list)
 		do
-			grep -q "^$(echo $file | grepesc)$" $tmpdir/files.list && continue
+			egrep -q "^$(echo $file | grepesc)$" $tmpdir/files.list && continue
 			local modifiers=$(cat $package_dir/modifiers 2> /dev/null; \
-							  fgrep -sl $package_dir */modifiers | cut -d/ -f1)
+				fgrep -sl $package_dir */modifiers | cut -d/ -f1)
 			for i in modifiers; do
-				grep -qs "^$(echo $file | grepesc)$" $i/files.list && continue 2
+				egrep -qs "^$(echo $file | grepesc)$" $i/files.list && continue 2
 			done
 			files_to_remove="$files_to_remove $file"
 		done
 	fi
+	[ "$debug" ] && echo "DEBUG: file_to_remove: $files_to_remove"
 
 	local check=false
 	local file_list
@@ -133,33 +134,33 @@ install_package() {
 		file_list="$file_list $i"
 		check=true
 	done
+	[ "$debug" ] && echo "DEBUG: file_list is set"
 
-	# Check possibly modified files against other packages file.list
-	if $check; then
-		for pkg in $installed/*
+	# Check possibly modified files against other packages files.list
+	if [ "$check" ]; then
+		[ "$debug" ] && echo "DEBUG: check modified files"
+		for file in $file_list
 		do
-		  	[ "$pkg" == "$package_name" ] && continue
-		  	[ -s $pkg/files.list ] || continue
+			filegrep=$(egrep ^${file}$ $installed/*/files.list)
+			if [ "$filegrep" ]; then
+				local list=$(echo $filegrep | cut -d ":" -f 1)
+				local name=$(basename $(dirname $list))
+				[  "$package_name" == "$name" ] && continue
+				echo -n "Modified package: $name"
+				status
 
-		  	for file in $file_list; do
-		  		# $package_name wants to install $file which is already
-		  		# installed from $pkg
-				if grep -q ^$file$ $pkg/files.list; then
-					# Tell $pkg that $package_name is going to overwrite some
-					# of its files
-					if [ -s "$pkg/volatile.cpio.gz" ]; then
-						# We can modify backed up files without notice
-						zcat $pkg/volatile.cpio.gz | cpio -t --quiet | \
-						grep -q "^${file#/}$" && continue
-					fi
-					base_name=$(basename $pkg)
-					if [ "$package_name" != "$base_name" ]; then
-						[ "$debug" ] && \
-							echo "DEBUG: Adding $base_name to: $pkg/modifiers"
-						echo "$package_name" >> $pkg/modifiers
-					fi
-				fi
-			done
+				# Tell $pkg that $package_name is going to overwrite some
+				# of its files
+				#if [ -s "$pkg/volatile.cpio.gz" ]; then
+					## We can modify backed up files without notice
+					#zcat $pkg/volatile.cpio.gz | cpio -t --quiet | \
+					#grep -q "^${file#/}$" && continue
+				#fi
+
+				[ "$debug" ] && \
+					echo "DEBUG: Adding $pkg to: $name/modifiers"
+				echo "$pkg" >> $installed/$name/modifiers
+			fi
 		done
 	fi
 
