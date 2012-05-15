@@ -26,7 +26,7 @@ $(boldify $(gettext "Options:"))
   --mirror    $(gettext "List all the packages on mirror")
   --blocked   $(gettext "List all blocked packages")
   --short     $(gettext "Short list of installed packages")
-  --root      $(gettext "Set the root file system path")
+  --root=     $(gettext "Set the root file system path")
   --color=NB  $(gettext "Set package name color in list")
   --debug     $(gettext "Display some usefull debug information")
 

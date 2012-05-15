@@ -100,7 +100,7 @@ full_package() {
 check_installed() {
 	local name="$1"
 	if [ -d "$installed/$name" ]; then
-		echo $(boldify "$name") $(gettext "package is already installed.")
+		echo $(boldify "$name") $(gettext "package is already installed")
 		continue
 	fi
 }
@@ -145,7 +145,7 @@ missing_deps() {
 	for pkgorg in $depends; do
 		local pkg=$(equivalent_pkg $pkgorg)
 		if [ ! -d "$installed/$pkg" ]; then
-			gettext "Missing: \$pkg"; newline
+			gettext "Missing:"; echo " $pkg"
 			deps=$(($deps+1))
 		elif [ ! -f "$installed/$pkg/receipt" ]; then
 			gettext "WARNING Dependency loop between \$package and \$pkg."; newline
@@ -155,7 +155,8 @@ missing_deps() {
 		echo $deps $(gettext "missing package(s) to install.")
 	fi
 
-	gettext "\$deps missing package(s) to install."; newline
+	echo -n "$(colorize "$deps" 34) "
+	gettext "missing dep(s) to install."; newline
 
 	# Return true if missing deps
 	[ "$deps" != "0" ]

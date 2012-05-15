@@ -27,6 +27,8 @@ $(boldify $(gettext "Usage:")) $name [packages|--options]
 $(gettext "Install SliTaz Packages")
 
 $(boldify $(gettext "Options:"))
+  --forced    $(gettext "Force package reinstallation")
+  --root=     $(gettext "Set the root file system path")
 
 $(boldify $(gettext "Examples:"))
   $name package1 package2 packageN
@@ -259,8 +261,6 @@ install_local() {
 install_web() {
 	local package_name="$1"
 
-	check_root
-
 	# Check if get-Package
 	if ! is_package_mirrored $package_name; then
 		package_name="get-$package_name"
@@ -283,18 +283,17 @@ install_web() {
 
 	cd $CACHE_DIR > /dev/null
 	if [ -f "$package_full.tazpkg" ]; then
-		eval_gettext "\$package_full is already in the cache : \$CACHE_DIR"; newline
+		echo -n "$(colorize "$package_full" 34) "; echo ": $CACHE_DIR)"
 		# Check package download was finished
 		if ! tail -c 2k $package_full.tazpkg | fgrep -q 00000000TRAILER; then
 			eval_gettext "Continuing \$package_name download"; newline
 			download "$package_full.tazpkg"
 		fi
-
 		# Check that the package has the correct checksum
-#		if [ "$($CHECKSUM $package_full.tazpkg)" != "$(fgrep \"  $package_full.tazpkg\" $pkgsmd5)" ]; then
-#			rm -f $package.tazpkg
-#			download "$package_full.tazpkg"
-#		fi
+		#if [ "$($CHECKSUM $package_full.tazpkg)" != "$(fgrep \"  $package_full.tazpkg\" $pkgsmd5)" ]; then
+		#	rm -f $package.tazpkg
+		#	download "$package_full.tazpkg"
+		#fi
 	else
 		newline
 		download "$package_full.tazpkg"
@@ -338,15 +337,12 @@ install_deps() {
 	fi
 }
 
-# Old style
-case $1 in
-	install|-i)
-		install_local $2 $3
-		exit 0 ;;
-	get-install|-gi)
-		install_web $2
-		exit 0 ;;
-	"") usage ;;
+#
+# Commands and exit
+#
+
+case "$1" in
+	""|*usage|*help) usage ;;
 esac
 
 #
@@ -358,9 +354,15 @@ check_root
 for pkg in $@
 do
 	case "$pkg" in
-		*.tazpkg|.spk)
-			echo "Local package" ;;
+		*.tazpkg|*.spk)
+			[ "$forced" ] || check_installed $(package_name $package_file)
+			echo "Local package"
+			#install_local $pkg
+			;;
+		--*) continue ;;
+		*)
+			[ "$forced" ] || check_installed $pkg
+			install_web $pkg ;;
 	esac
-	echo "Adding: $pkg"
 done
 exit 0

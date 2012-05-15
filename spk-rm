@@ -23,7 +23,7 @@ $(gettext "Remove installed packages and ther dependencies")
 
 $(boldify $(gettext "Options:"))
   --confirm   $(gettext "Ask before removing any packages")
-  --root      $(gettext "Set the root file system path")
+  --root=     $(gettext "Set the root file system path")
   --verbose   $(gettext "Be more verbose when removing files")
 
 $(boldify $(gettext "Examples:"))
