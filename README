@@ -15,12 +15,13 @@ commands such as ls or info.
 
 Toolset
 -------------------------------------------------------------------------------
-Spk is separated into many small tools following the UNIX philosophy: one tool 
+Spk is separated into many small tools following the UNIX philosophy: one tool
 for one task but do that task well. Here is a list of proposed tools and their
 functions:
 
+	* spk-ls     : List packages and packages files
 	* spk-add    : Install local or online pkgs
-	* spk-rm     : Remove packages: confirm in option ?
+	* spk-rm     : Remove packages with confirm in option
 	* spk-up     : Upgrade the whole system
 	* spk-search : Search for packages or files
 	* spk-archive: Manage package extraction, compression, and packing
@@ -30,6 +31,7 @@ functions:
 LibSpk
 -------------------------------------------------------------------------------
 Libspk provides base functions and internal variables used by almost all spk-tools.
+Libspk must be installed vis 'make install-lib' to develop spk-tools.
 
 	* Source: libtaz.sh, libpkg.sh, slitaz.conf
 	* Internal Spk variables (lowercase, not configurable)

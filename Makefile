@@ -32,10 +32,15 @@ install-msg: msgfmt
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/locale
 	cp -a po/mo/* $(DESTDIR)$(PREFIX)/share/locale
 
-install:
+install-lib:
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/lib/slitaz
+	install -m 0755 lib/libspk.sh $(DESTDIR)$(PREFIX)/lib/slitaz
+
+install: install-lib
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/spk
-	install -m 0755 spk $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 spk-ls $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 spk-rm $(DESTDIR)$(PREFIX)/bin
 
 # Clean source
 
