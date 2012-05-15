@@ -244,7 +244,6 @@ install_package() {
 # Parameters: package_file
 install_local() {
 	package_file="$1"
-	check_root
 	check_valid_tazpkg $package_file
 
 	# Check if forced install.
@@ -283,7 +282,7 @@ install_web() {
 
 	cd $CACHE_DIR > /dev/null
 	if [ -f "$package_full.tazpkg" ]; then
-		echo -n "$(colorize "$package_full" 34) "; echo ": $CACHE_DIR)"
+		echo -n "$(colorize "$package_full" 34)"; echo ": $CACHE_DIR)"
 		# Check package download was finished
 		if ! tail -c 2k $package_full.tazpkg | fgrep -q 00000000TRAILER; then
 			eval_gettext "Continuing \$package_name download"; newline
