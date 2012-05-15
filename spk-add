@@ -125,44 +125,41 @@ install_package() {
 	fi
 	[ "$debug" ] && echo "DEBUG: file_to_remove: $files_to_remove"
 
-	local check=false
-	local file_list
 	# Create list of all possibly modified files
+	local file_list
 	for i in $(fgrep -v [ $tmpdir/files.list); do
 		[ -e "${root}${i}" ] || continue
 		[ -d "${root}${i}" ] && continue
 		file_list="$file_list $i"
-		check=true
 	done
 	[ "$debug" ] && echo "DEBUG: file_list is set"
 
 	# Check possibly modified files against other packages files.list
-	if [ "$check" ]; then
-		[ "$debug" ] && echo "DEBUG: check modified files"
-		for file in $file_list
-		do
-			filegrep=$(egrep ^${file}$ $installed/*/files.list)
-			if [ "$filegrep" ]; then
-				local list=$(echo $filegrep | cut -d ":" -f 1)
-				local name=$(basename $(dirname $list))
-				[  "$package_name" == "$name" ] && continue
-				echo -n "Modified package: $name"
-				status
-
-				# Tell $pkg that $package_name is going to overwrite some
-				# of its files
-				#if [ -s "$pkg/volatile.cpio.gz" ]; then
-					## We can modify backed up files without notice
-					#zcat $pkg/volatile.cpio.gz | cpio -t --quiet | \
-					#grep -q "^${file#/}$" && continue
-				#fi
-
-				[ "$debug" ] && \
-					echo "DEBUG: Adding $pkg to: $name/modifiers"
-				echo "$pkg" >> $installed/$name/modifiers
+	[ "$debug" ] && echo "DEBUG: check modified files"
+	for file in $file_list
+	do
+		filegrep=$(egrep ^${file}$ $installed/*/files.list)
+		if [ "$filegrep" ]; then
+			local list=$(echo $filegrep | cut -d ":" -f 1)
+			local name=$(basename $(dirname $list))
+			[  "$pkg" == "$name" ] && continue
+			echo -n "Modified package: $name"
+			# Tell $name that $pkg is going to overwrite some of its files
+			if [ -s "$installed/$name/volatile.cpio.gz" ]; then
+				# We can modify backed up files without notice
+				zcat $installed/$name/volatile.cpio.gz | cpio -t --quiet | \
+				grep -q "^${file#/}$" && continue
 			fi
-		done
-	fi
+			# Add $pkg to the modifiers list og $name
+			if ! egrep -q ^${package_name}$ $installed/$name/modifiers; then
+				[ "$debug" ] && \
+					echo -en "\nDEBUG: Added $pkg to: $name/modifiers"
+				echo "$package_name" >> $installed/$name/modifiers
+			fi
+			status
+		fi
+	done
+
 
 	cd $tmpdir || exit 1
 	cp receipt files.list $package_dir
