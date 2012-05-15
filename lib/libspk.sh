@@ -148,15 +148,11 @@ missing_deps() {
 			gettext "Missing:"; echo " $pkg"
 			deps=$(($deps+1))
 		elif [ ! -f "$installed/$pkg/receipt" ]; then
-			gettext "WARNING Dependency loop between \$package and \$pkg."; newline
+			gettext "WARNING: Dependency loop between \$package and \$pkg."; newline
 		fi
 	done
-	if [ $deps -gt 0 ]; then
-		echo $deps $(gettext "missing package(s) to install.")
-	fi
 
-	echo -n "$(colorize "$deps" 34) "
-	gettext "missing dep(s) to install..."; newline
+	gettext "Missing dependendcies:"; echo " $(colorize "$deps" 34)"
 
 	# Return true if missing deps
 	[ "$deps" != "0" ]

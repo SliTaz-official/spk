@@ -279,7 +279,8 @@ install_web() {
 
 	cd $CACHE_DIR > /dev/null
 	if [ -f "$package_full.tazpkg" ]; then
-		echo -n "$(colorize "$package_full" 34)"; echo ": $CACHE_DIR"
+		[ "$count" == 1 ] && newline
+		gettext "Using cache:"; echo " $(colorize "$package_full" 34)"
 		# Check package download was finished
 		if ! tail -c 2k $package_full.tazpkg | fgrep -q 00000000TRAILER; then
 			eval_gettext "Continuing \$package_name download"; newline
@@ -345,6 +346,7 @@ esac
 # Handle packages: package package.tazpkg ... packageN packageN.tazpkg
 #
 
+count=0
 check_root
 
 for pkg in $@
@@ -358,6 +360,7 @@ do
 		--*) continue ;;
 		*)
 			[ "$forced" ] || check_installed $pkg
+			count=$(($count + 1))
 			install_web $pkg ;;
 	esac
 done
