@@ -35,6 +35,29 @@ EOT
 	exit 0
 }
 
+# Update system databases
+update_databases() {
+	if [ -f $ROOT/usr/bin/update-desktop-database ] && [ -n "$updatedesktopdb" ]; then
+		chroot "$ROOT/" /usr/bin/update-desktop-database /usr/share/applications 2>/dev/null
+	fi
+	# Mimetypes
+	if [ -f $ROOT/usr/bin/update-mime-database ] && [ -n "$updatemimedb" ]; then
+		chroot "$ROOT/" /usr/bin/update-mime-database /usr/share/mime
+	fi
+	# Icons
+	if [ -f $ROOT/usr/bin/gtk-update-icon-cache ] && [ -n "$updateicondb" ]; then
+		chroot "$ROOT/" /usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor
+	fi
+	# Glib schemas
+	if [ -f $ROOT/usr/bin/glib-compile-schemas ] && [ -n "$compile_schemas" ]; then
+		chroot "$ROOT/" /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+	fi
+	# Kernel modules
+	if [ -f $ROOT/sbin/depmod ] && [ -n "$updatedepmod" ]; then
+		chroot "$ROOT/" /sbin/depmod -a
+	fi
+}
+
 # This function installs a package in the rootfs.
 # Parameters: package_name package_file
 install_package() {
@@ -210,7 +233,6 @@ install_package() {
 	if [ "$(fgrep /lib/modules $package_dir/files.list)" ]; then
 		updatedepmod=yes
 	fi
-
 	separator
 	eval_gettext "\$package_name (\$VERSION\$EXTRAVERSION) is installed."; newline
 	newline
@@ -229,10 +251,7 @@ install_local() {
 	fi
 
 	install_package $package_file
-	update_desktop_database
-	update_mime_database
-	update_icon_database
-	compile_glib_schemas
+	update_databases
 }
 
 # Download and install a package. TODO: Handle Undigest Mirrors
@@ -284,8 +303,7 @@ install_web() {
 	install_package "$CACHE_DIR/$package_full.tazpkg"
 
 	[ -n "$AUTOEXEC" ] && $package_name $ROOT
-	update_desktop_database
-	update_mime_database
+	update_databases
 }
 
 # Install all missing deps. Auto install or ask user then install all missing
@@ -317,37 +335,6 @@ install_deps() {
 		gettext \
 			"Dependencies unresolved. Installed but will probably not work."
 		newline && newline
-	fi
-}
-
-# Update system databases
-update_desktop_database() {
-	if [ -f $ROOT/usr/bin/update-desktop-database ] && [ -n "$updatedesktopdb" ]; then
-		chroot "$ROOT/" /usr/bin/update-desktop-database /usr/share/applications 2>/dev/null
-	fi
-}
-
-update_mime_database() {
-	if [ -f $ROOT/usr/bin/update-mime-database ] && [ -n "$updatemimedb" ]; then
-		chroot "$ROOT/" /usr/bin/update-mime-database /usr/share/mime
-	fi
-}
-
-update_icon_database() {
-	if [ -f $ROOT/usr/bin/gtk-update-icon-cache ] && [ -n "$updateicondb" ]; then
-		chroot "$ROOT/" /usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor
-	fi
-}
-
-compile_glib_schemas() {
-	if [ -f $ROOT/usr/bin/glib-compile-schemas ] && [ -n "$compile_schemas" ]; then
-		chroot "$ROOT/" /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
-	fi
-}
-
-update_kernel_modules() {
-	if [ -f $ROOT/sbin/depmod ] && [ -n "$updatedepmod" ]; then
-		chroot "$ROOT/" /sbin/depmod -a
 	fi
 }
 
