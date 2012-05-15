@@ -135,6 +135,7 @@ do
 				echo "TODO: test 'spk-add $pkg'"
 				continue ;;
 		esac
+		count=$(($count + 1))
 		[ "$count" == 1 ] && newline
 		boldify "$(gettext "Package") $pkg"
 		separator
