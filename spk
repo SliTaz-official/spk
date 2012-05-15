@@ -1,0 +1,126 @@
+#!/bin/sh
+#
+# Spk - The SliTaz Packages toolset. Read the README before adding or
+# modifing any code in spk!
+#
+# Copyright (C) SliTaz GNU/Linux - BSD License
+# Author: See AUTHORS files
+#
+#. /usr/lib/slitaz/libspk.sh
+. lib/libspk.sh
+
+#
+# Functions
+#
+
+# Help and usage
+usage() {
+	name=$(basename $0)
+	cat << EOT
+
+$(boldify $(gettext "Usage:")) $name [packages|--options]
+
+$(gettext "SliTaz Packages toolset")
+
+$(boldify $(gettext "Commands:"))
+  info     $(gettext "Display path, mirror and other stats")
+  activity $(gettext "Display packages activities")
+
+$(boldify $(gettext "Options:"))
+  --block     $(gettext "TODO")
+  --root      $(gettext "Set the root file system path")
+  --debug     $(gettext "Display some usefull debug information")
+
+$(boldify $(gettext "Examples:"))
+  $name package1 package2 packageN
+  $name package --block
+
+EOT
+	exit 0
+}
+
+#
+# Commands and exit
+#
+
+case "$1" in
+	""|*usage|*help) usage ;;
+	info)
+		newline
+		boldify "Spk Info"
+		separator
+		gettext "Database   :"; echo " $installed"
+		gettext "Mirror URL :"; echo " $(cat $mirrorurl)"
+		count_installed
+		count_mirrored
+		separator
+		newline && exit 0 ;;
+	activity)
+		newline
+		boldify "Spk Activity"
+		separator
+		cat $activity
+		separator && newline
+		exit 0 ;;
+	ls|add)
+		# Sort of helper on wrong commands or --option ? Or have better
+		# usage/help: spk help [command] ?
+		gettext "Did you mean ?"; echo " spk-$@"
+		exit 0 ;;
+esac
+
+#
+# Handle packages: spk package1 ... packageN
+#
+
+[ "$debug" ] && echo "DEBUG: cmdline: $0 $@"
+count=0
+
+for pkg in $@
+do
+	# Handle: --options
+	case " $@ " in
+		*\ --rm\ *)
+			spk-rm $pkg --count=$count
+			count=$(($count + 1))
+			continue ;;
+	esac
+	count=$(($count + 1))
+	# Installed ?
+	if [ -d "$installed/$pkg" ]; then
+		[ "$count" == 1 ] && newline
+		unset_receipt
+		. $installed/$pkg/receipt
+		boldify "$(gettext "Package") $pkg"
+		separator
+		gettext "Status     : installed"; newline
+		receipt_info
+		separator && newline
+		continue
+	fi
+	# Mirrored ?
+	mirrored=$(grep "^$pkg |" $pkgsdesc)
+	if [ "$mirrored" ]; then
+		# Handle: --add
+		if [ "$add" ]; then
+			echo "TODO: test 'spk-add $pkg'"
+		else
+			[ "$count" == 1 ] && newline
+			boldify "$(gettext "Package") $pkg"
+			separator
+			gettext "Status     : not installed"; echo ""
+			echo "$mirrored" | awk 'BEGIN { FS = "|" } ; { print \
+				"Version    :" $2 "\n" \
+				"Short desc :" $3 "\n" \
+				"Category   :" $4 }'
+			separator && newline
+		fi
+		continue
+	fi
+	# Skip options such as --confirm or unknow package
+	case "$pkg" in
+		--*) continue ;;
+		*) gettext "Unknow package"; echo ": $pkg"
+	esac
+done
+exit 0

@@ -38,9 +38,11 @@ install-lib:
 
 install: install-lib
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/sbin
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/spk
+	install -m 0755 spk $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 spk-ls $(DESTDIR)$(PREFIX)/bin
-	install -m 0755 spk-rm $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 spk-rm $(DESTDIR)$(PREFIX)/sbin
 
 # Clean source
 

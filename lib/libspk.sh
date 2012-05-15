@@ -16,8 +16,17 @@ installed="${root}${PKGS_DB}/installed"
 pkgsdesc="${root}${PKGS_DB}/packages.desc"
 pkgsmd5="${root}${PKGS_DB}/packages.md5"
 # ????do we need packages.equiv????
-blocked="${root}${PKGS_DB}/blocked-packages.list"
+blocked="${root}${PKGS_DB}/blocked.list"
 activity="${root}${PKGS_DB}/activity"
+
+#
+# Sanity checks
+#
+
+if [ ! -d "${root}${PKGS_DB}" ]; then
+	gettext "Can't find DB:"; echo " ${root}${PKGS_DB}"
+	exit 1
+fi
 
 #
 # Functions
@@ -45,13 +54,13 @@ extract_receipt() {
 # Used by: list
 count_installed() {
 	local count=$(ls $installed | wc -l)
-	gettext "Installed packages"; echo ": $count"
+	gettext "Installed  :"; echo " $count"
 }
 
 # Used by: list
 count_mirrored() {
 	local count=$(cat $pkgsmd5 | wc -l)
-	gettext "Mirrored packages"; echo ": $count"
+	gettext "Mirrored   :"; echo " $count"
 }
 
 is_package_mirrored() {
@@ -72,7 +81,7 @@ download() {
 	esac
 }
 
-# Assume package_name is valid
+# Assume package name is valid
 # There may be a more efficient way to do this...
 full_package() {
 	local name=$1
