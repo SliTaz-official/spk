@@ -23,17 +23,20 @@ $(boldify $(gettext "Usage:")) $name [packages|--options]
 $(gettext "SliTaz Packages toolset")
 
 $(boldify $(gettext "Commands:"))
-  info     $(gettext "Display path, mirror and other stats")
-  activity $(gettext "Display packages activities")
+  info        $(gettext "Display path, mirror and other stats")
+  activity    $(gettext "Display packages activities")
 
 $(boldify $(gettext "Options:"))
-  --block     $(gettext "TODO")
+  --add       $(gettext "Install packages if mirrored")
+  --rm        $(gettext "Remove installed packages")
+  --block     $(gettext "Add packages to the blocked list")
+  --unblock   $(gettext "Remove packages from the blocked list")
   --root      $(gettext "Set the root file system path")
   --debug     $(gettext "Display some usefull debug information")
 
 $(boldify $(gettext "Examples:"))
   $name package1 package2 packageN
-  $name package --block
+  $name package package2 --block
 
 EOT
 	exit 0
@@ -78,16 +81,41 @@ count=0
 
 for pkg in $@
 do
-	# Handle: --options
-	case " $@ " in
-		*\ --rm\ *)
-			spk-rm $pkg --count=$count
-			count=$(($count + 1))
-			continue ;;
-	esac
-	count=$(($count + 1))
 	# Installed ?
 	if [ -d "$installed/$pkg" ]; then
+		# Handle: --options
+		case " $@ " in
+			*\ --block\ *)
+				check_root
+				[ -d "$installed/$pkg" ] || continue
+				if grep -qs ^${pkg}$ $blocked; then
+					echo -n "$(boldify "$pkg") "
+					gettext "is already blocked"; newline
+				else
+					gettext "Blocking package:"; echo -n " $pkg"
+					echo $pkg >> $blocked
+					log "Blocked package: $pkg" && status
+				fi
+				continue ;;
+			*\ --unblock\ *)
+				check_root
+				[ -d "$installed/$pkg" ] || continue
+				if grep -qs ^${pkg}$ $blocked; then
+					gettext "Unblocking package:"; echo -n " $pkg"
+					sed -i /"^${pkg}$"/d $blocked
+					log "Unblocked package: $pkg" && status
+				else
+					echo -n "$(boldify "$pkg") "
+					gettext "is not blocked"; newline
+				fi
+				continue ;;
+			*\ --rm\ *)
+				[ -d "$installed/$pkg" ] || continue
+				spk-rm $pkg --count=$count
+				count=$(($count + 1))
+				continue ;;
+		esac
+		count=$(($count + 1))
 		[ "$count" == 1 ] && newline
 		unset_receipt
 		. $installed/$pkg/receipt
@@ -101,26 +129,27 @@ do
 	# Mirrored ?
 	mirrored=$(grep "^$pkg |" $pkgsdesc)
 	if [ "$mirrored" ]; then
-		# Handle: --add
-		if [ "$add" ]; then
-			echo "TODO: test 'spk-add $pkg'"
-		else
-			[ "$count" == 1 ] && newline
-			boldify "$(gettext "Package") $pkg"
-			separator
-			gettext "Status     : not installed"; echo ""
-			echo "$mirrored" | awk 'BEGIN { FS = "|" } ; { print \
-				"Version    :" $2 "\n" \
-				"Short desc :" $3 "\n" \
-				"Category   :" $4 }'
-			separator && newline
-		fi
+		# Handle: --options
+		case " $@ " in
+			*\ --add\ *)
+				echo "TODO: test 'spk-add $pkg'"
+				continue ;;
+		esac
+		[ "$count" == 1 ] && newline
+		boldify "$(gettext "Package") $pkg"
+		separator
+		gettext "Status     : not installed"; echo ""
+		echo "$mirrored" | awk 'BEGIN { FS = "|" } ; { print \
+			"Version    :" $2 "\n" \
+			"Short desc :" $3 "\n" \
+			"Category   :" $4 }'
+		separator && newline
 		continue
 	fi
 	# Skip options such as --confirm or unknow package
 	case "$pkg" in
 		--*) continue ;;
-		*) gettext "Unknow package"; echo ": $pkg"
+		*) gettext "WARNING: Unknow package"; echo ": $pkg"
 	esac
 done
 exit 0
