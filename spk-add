@@ -153,7 +153,12 @@ install_package() {
 						zcat $pkg/volatile.cpio.gz | cpio -t --quiet | \
 						grep -q "^${file#/}$" && continue
 					fi
-					echo "$package_name" >> $pkg/modifiers
+					base_name=$(basename $pkg)
+					if [ "$package_name" != "$base_name" ]; then
+						[ "$debug" ] && \
+							echo "DEBUG: Adding $base_name to: $pkg/modifiers"
+						echo "$package_name" >> $pkg/modifiers
+					fi
 				fi
 			done
 		done
@@ -161,6 +166,7 @@ install_package() {
 
 	cd $TMP_DIR || exit 1
 	cp receipt files.list $package_dir
+
 	# Copy the description if found.
 	[ -f "description.txt" ] && cp description.txt $package_dir
 
