@@ -218,7 +218,7 @@ install_package() {
 
 # Install .tazpkg packages.
 # Parameters: package_file
-install_pkg() {
+install_local() {
 	package_file="$1"
 	check_root
 	check_valid_tazpkg $package_file
@@ -237,7 +237,7 @@ install_pkg() {
 
 # Download and install a package. TODO: Handle Undigest Mirrors
 # Parameters: package_name
-get_install() {
+install_web() {
 	local package_name="$1"
 
 	check_root
@@ -354,18 +354,26 @@ update_kernel_modules() {
 # Old style
 case $1 in
 	install|-i)
-		install_pkg $2 $3
+		install_local $2 $3
 		exit 0 ;;
 	get-install|-gi)
-		get_install $2
+		install_web $2
 		exit 0 ;;
 	"") usage ;;
 esac
 
-# Usage: spk-add package ... packageN
+#
+# Handle packages: package package.tazpkg ... packageN packageN.tazpkg
+#
+
+check_root
+
 for pkg in $@
 do
-	[ -d "$installed/$pkg" ] && continue
+	case "$pkg" in
+		*.tazpkg|.spk)
+			echo "Local package" ;;
+	esac
 	echo "Adding: $pkg"
 done
 exit 0

@@ -101,7 +101,7 @@ check_installed() {
 	local name="$1"
 	if [ -d "$installed/$name" ]; then
 		echo $(boldify "$name") $(gettext "package is already installed.")
-		exit 0
+		continue
 	fi
 }
 
