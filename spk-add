@@ -326,7 +326,7 @@ is_elf() {
 	[ "$(dd if=$1 bs=1 skip=1 count=3 2> /dev/null)" = "ELF" ]
 }
 
-# Print shared library dependencies
+# Print shared library dependencies: we have /usr/bin/ldd
 ldd() {
 	LD_TRACE_LOADED_OBJECTS=1 /lib/ld*.so $1 2> /dev/null
 }
@@ -362,11 +362,21 @@ update_kernel_modules() {
 	fi
 }
 
+# Old style
 case $1 in
 	install|-i)
-		install_pkg $2 $3 ;;
+		install_pkg $2 $3
+		exit 0 ;;
 	get-install|-gi)
-		get_install $2 ;;
-	*)
-		usage ;;
+		get_install $2
+		exit 0 ;;
+	"") usage ;;
 esac
+
+# Usage: spk-add package ... packageN
+for pkg in $@
+do
+	[ -d "$installed/$pkg" ] && continue
+	echo "Adding: $pkg"
+done
+exit 0
