@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Spk-Archive - SliTaz Package Archive Manager
 #
@@ -11,7 +11,7 @@ source /usr/lib/slitaz/libspk.sh
 
 usage() {
 	name=$(basename $0)
-	cat << EOT 
+	cat << EOT
 
 $(boldify $(gettext "Usage:")) $name [command] package
 
@@ -33,11 +33,11 @@ EOT
 extract_package() {
 	local package_file=$1
 	local package_name=$(package_name $package_file)
-	
+
 	eval_gettext "Extracting \$package_name... "
 	cpio -idm --quiet < ${package_file##*/} && rm -f ${package_file##*/}
 	status
-	
+
 	gettext "Extracting the pseudo fs... "
 	if [ -f fs.cpio.lzma ]; then
 		echo -n "(lzma) "
@@ -53,10 +53,10 @@ extract_package() {
 extract() {
 	local package_file=$1
 	local target_dir=$2
-	
+
 	# validate the file
 	check_valid_tazpkg $package_file
-	
+
 	# find the package name
 	local package_name=$(package_name $package_file)
 
@@ -64,11 +64,11 @@ extract() {
 	local dest_dir=$(pwd)/$package_name
 	[ -n "$target_dir" ] && dest_dir=$target_dir/$package_name
 	mkdir -p $dest_dir
-	
+
 	newline
 	echo $(boldify $(gettext "Extracting:")) $package_name
 	separator
-	
+
 	gettext "Copying original package..."
 	cp $package_file $dest_dir
 	status
@@ -83,37 +83,37 @@ extract() {
 # Recompress .tazpkg cpio archive with lzma.
 # Parameters: package_file
 recompress() {
-	local package_file=$1	
+	local package_file=$1
 	valid_tazpkg $package_file
-	
+
 	local package_name=$(package_name $package_file)
-	
+
 	newline
 	echo $(boldify $(gettext "Recompressing:")) $package_name
 	separator
-	
+
 	mkdir -p $TMP_DIR
-	
+
 	gettext "Copying original package..."
 	cp $package_file $TMP_DIR
 	status
-	
+
 	pushd $TMP_DIR > /dev/null
 		extract_package $package_file
-	
+
 		gettext "Recompressing the fs... "
 		find fs | cpio -o -H newc --quiet | lzma e fs.cpio.lzma -si
 		rm -rf fs
 		status
 	popd > /dev/null
-	
+
 	gettext "Creating new package... "
 	find $TMP_DIR -print | cpio -o -H newc --quiet > \
 		$(basename $package_file).$$ && mv -f \
 		$(basename $package_file).$$ \
 		$(basename $package_file)
 	status
-	
+
 	rm -rf $TMP_DIR
 }
 
@@ -147,7 +147,7 @@ repack() {
 		echo -e "$MISSING"
 		exit 1
 	fi
-	mkdir -p $TMP_DIR 
+	mkdir -p $TMP_DIR
 	pushd $TMP_DIR > /dev/null
 	FILES="fs.cpio.lzma\n"
 	for i in $(ls $INSTALLED/$PACKAGE) ; do
@@ -237,7 +237,7 @@ pack() {
 		echo "$(bold Packing :) $PACKAGE"
 		separator
 		# Create files.list with redirecting find outpout.
-		gettext "Creating the list of files..." 
+		gettext "Creating the list of files..."
 		pushd fs
 		find . -type f -print > ../files.list
 		find . -type l -print >> ../files.list

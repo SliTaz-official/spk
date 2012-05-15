@@ -46,9 +46,9 @@ EOT
 extract_receipt() {
 	local dir="$1"
 	local file="$2"
-	pushd "$dir" > /dev/null
+	cd "$dir"
 	{ cpio --quiet -i receipt > /dev/null 2>&1; } < $file
-	popd > /dev/null
+	cd - >/dev/null
 }
 
 # Used by: list
@@ -100,8 +100,7 @@ full_package() {
 check_for_installed_package() {
 	local name="$1"
 	if [ -d "$installed/$name" ]; then
-		newline
-		echo $name $(gettext "package is already installed.")
+		echo $(boldify "$name") $(gettext "package is already installed.")
 		exit 0
 	fi
 }

@@ -60,11 +60,12 @@ install_package() {
 #	touch $package_dir/modifiers
 #	touch $package_dir/files.list
 
-	# add package checksum to pkgsmd5
+	# Add package checksum to pkgsmd5
 	sed -i "/ $(basename $package_dir)$/d" $pkgsmd5 2> /dev/null
-	pushd $(dirname $package_file) > /dev/null
-		$CHECKSUM $(basename $package_file) >> $pkgsmd5
-	popd > /dev/null
+	oldpwd=$(pwd)
+	cd $(dirname $package_file) || exit 1
+	$CHECKSUM $(basename $package_file) >> $pkgsmd5
+	cd $oldpwd
 
 	# Resolve package deps.
 	if missing_deps $package_name $DEPENDS; then
@@ -79,10 +80,10 @@ install_package() {
 	status
 
 	# Extract Package
-	pushd $TMP_DIR > /dev/null
-		rm receipt
-		spk-archive extract $package_file
-	popd > /dev/null
+	cd $TMP_DIR || exit 1
+	rm receipt
+	spk-archive extract $package_file
+	cd - >/dev/null
 
 	# Get files to remove if upgrading
 	local files_to_remove
@@ -130,52 +131,52 @@ install_package() {
 		done
 	fi
 
-	pushd $TMP_DIR > /dev/null
-		cp receipt files.list $package_dir
-		# Copy the description if found.
-		[ -f "description.txt" ] && cp description.txt $package_dir
+	cd $TMP_DIR || exit 1
+	cp receipt files.list $package_dir
+	# Copy the description if found.
+	[ -f "description.txt" ] && cp description.txt $package_dir
 
-		# Pre install commands.
-		if grep -q ^pre_install $package_dir/receipt; then
-			pre_install $ROOT
-		fi
+	# Pre install commands.
+	if grep -q ^pre_install $package_dir/receipt; then
+		pre_install $ROOT
+	fi
 
-		# Handle Config Files from receipt
-		if [ -n "$CONFIG_FILES" ]; then
-			pushd $fs > /dev/null
-				# save 'official' configuration files
-				eval_gettext "Saving configuration files for \$package_name... "
+	# Handle Config Files from receipt
+	if [ -n "$CONFIG_FILES" ]; then
+		cd $fs || exit 1
+		# save 'official' configuration files
+		eval_gettext "Saving configuration files for \$package_name... "
 
-				local confs
-				for i in $CONFIG_FILES; do
-					confs="$confs $(find ${i#/} -type f 2> /dev/null)"
-				done
+		local confs
+		for i in $CONFIG_FILES; do
+			confs="$confs $(find ${i#/} -type f 2> /dev/null)"
+		done
 
-				echo $confs | cpio -o -H newc --quiet | gzip -9 > $package_dir/volatile.cpio.gz
+		echo $confs | cpio -o -H newc --quiet | gzip -9 > $package_dir/volatile.cpio.gz
 
-				# keep user configuration files
-				for conf_file in $confs; do
-					[ -e $conf_file ] || continue
-					cp -a $conf_file fs/$conf_file
-				done
-				status
-			popd > /dev/null
-		fi
-
-		# Merge ROOT_FS with Package FS
-		eval_gettext "Installing \$package_name... "
-		cp -a fs/* $ROOT/
+		# keep user configuration files
+		for conf_file in $confs; do
+			[ -e $conf_file ] || continue
+			cp -a $conf_file fs/$conf_file
+		done
 		status
+		cd - >/dev/null
+	fi
 
-		# Remove old config files
-		if [ -n $files_to_remove ]; then
-			eval_gettext "Removing old \$package_name... "
-			for file in $files_to_remove; do
-				remove_with_path $ROOT$file
-			done
-			status
-		fi
-	popd > /dev/null
+	# Merge ROOT_FS with Package FS
+	eval_gettext "Installing \$package_name... "
+	cp -a fs/* $ROOT/
+	status
+
+	# Remove old config files
+	if [ -n $files_to_remove ]; then
+		eval_gettext "Removing old \$package_name... "
+		for file in $files_to_remove; do
+			remove_with_path $ROOT$file
+		done
+		status
+	fi
+	cd - >/dev/null
 
 	# Remove the temporary directory.
 	gettext "Removing all tmp files... "
@@ -250,7 +251,7 @@ get_install() {
 
 	# Check if package is mirrored
 	if ! is_package_mirrored $package_name; then
-		gettext "Could not find \$package_name in repositories"; newline
+		gettext "Could not find package on mirror:"; echo " $package_name"
 		exit 1
 	fi
 
@@ -262,25 +263,24 @@ get_install() {
 		check_for_installed_package $package_name
 	fi
 
-	pushd $CACHE_DIR > /dev/null
-		if [ -f "$package_full.tazpkg" ]; then
-			eval_gettext "\$package_full is already in the cache : \$CACHE_DIR"; newline
-			# Check package download was finished
-			if ! tail -c 2k $package_full.tazpkg | fgrep -q 00000000TRAILER; then
-				eval_gettext "Continuing \$package_name download"; newline
-				download "$package_full.tazpkg"
-			fi
+	cd $CACHE_DIR > /dev/null
+	if [ -f "$package_full.tazpkg" ]; then
+		eval_gettext "\$package_full is already in the cache : \$CACHE_DIR"; newline
+		# Check package download was finished
+		if ! tail -c 2k $package_full.tazpkg | fgrep -q 00000000TRAILER; then
+			eval_gettext "Continuing \$package_name download"; newline
+			download "$package_full.tazpkg"
+		fi
 
-			# Check that the package has the correct checksum
+		# Check that the package has the correct checksum
 #			if [ "$($CHECKSUM $package_full.tazpkg)" != "$(fgrep \"  $package_full.tazpkg\" $pkgsmd5)" ]; then
 #				rm -f $package.tazpkg
 #				download "$package_full.tazpkg"
 #			fi
-		else
-			newline
-			download "$package_full.tazpkg"
-		fi
-	popd > /dev/null
+	else
+		newline
+		download "$package_full.tazpkg"
+	fi
 
 	install_package "$CACHE_DIR/$package_full.tazpkg"
 
