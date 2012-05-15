@@ -21,6 +21,7 @@ activity="${root}${PKGS_DB}/activity"
 
 #
 # Functions
+#
 
 # Display receipt information. Expects a receipt to be sourced
 receipt_info() {
@@ -43,7 +44,7 @@ extract_receipt() {
 
 # Used by: list
 count_installed() {
-	local count=$(ls ${root}${installed} | wc -l)
+	local count=$(ls $installed | wc -l)
 	gettext "Installed packages"; echo ": $count"
 }
 
@@ -89,7 +90,7 @@ full_package() {
 # Parameters: package
 check_for_installed_package() {
 	local name="$1"
-	if [ -d "${root}${installed}/$name" ]; then
+	if [ -d "$installed/$name" ]; then
 		newline
 		echo $name $(gettext "package is already installed.")
 		exit 0
@@ -104,14 +105,14 @@ equivalent_pkg() {
 		if echo $i | fgrep -q : ; then
 			# format 'alternative:newname'
 			# if alternative is installed then substitute newname
-			if [ -f ${root}${installed}/${i%:*}/receipt ]; then
+			if [ -f $installed/${i%:*}/receipt ]; then
 				# substitute package dependancy
 				echo ${i#*:}
 				return
 			fi
 		else
 			# if alternative is installed then nothing to install
-			if [ -f ${root}${installed}/$i/receipt ]; then
+			if [ -f $installed/$i/receipt ]; then
 				# substitute installed package
 				echo $i
 				return
@@ -135,10 +136,10 @@ missing_deps() {
 	# Calculate missing dependencies
 	for pkgorg in $depends; do
 		local pkg=$(equivalent_pkg $pkgorg)
-		if [ ! -d "${root}${installed}/$pkg" ]; then
+		if [ ! -d "$installed/$pkg" ]; then
 			gettext "Missing: \$pkg"; newline
 			deps=$(($deps+1))
-		elif [ ! -f "${root}${installed}/$pkg/receipt" ]; then
+		elif [ ! -f "$installed/$pkg/receipt" ]; then
 			gettext "WARNING Dependency loop between \$package and \$pkg."; newline
 		fi
 	done

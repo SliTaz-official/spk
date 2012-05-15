@@ -26,6 +26,7 @@ $(boldify $(gettext "Options:"))
   --mirror    $(gettext "List all the packages on mirror")
   --blocked   $(gettext "List all blocked packages")
   --short     ls: $(gettext "Short list of installed packages")
+  --root      $(gettext "Set the root file system path")
   --debug     $(gettext "Display some usefull debug information")
 
 $(boldify $(gettext "Examples:"))
@@ -94,13 +95,18 @@ done
 # Parse all installed pkgs receipt.
 #
 
+count=0
+
+newline
 boldify "$(gettext "Installed packages")"
 separator
 for pkg in $installed/*
 do
 	unset_receipt
 	. $pkg/receipt
-	newline
+	count=$(($count + 1))
+	[ "$count" != 1 ] && newline
+	gettext "Package    :"; echo " $PACKAGE"
 	receipt_info
 done
 separator
