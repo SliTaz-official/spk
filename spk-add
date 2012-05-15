@@ -9,10 +9,8 @@
 #. /usr/lib/slitaz/libspk.sh
 . lib/libspk.sh
 
-# Set to / for now until we add installing to chroot support
-# Could we update tools so they do not need this?
-ROOT=""
-TMP_DIR="/tmp/$RANDOM"
+
+tmpdir="/tmp/$RANDOM"
 
 #
 # Functions
@@ -40,24 +38,24 @@ EOT
 
 # Update system databases
 update_databases() {
-	if [ -f $ROOT/usr/bin/update-desktop-database ] && [ -n "$updatedesktopdb" ]; then
-		chroot "$ROOT/" /usr/bin/update-desktop-database /usr/share/applications 2>/dev/null
+	if [ -f $root/usr/bin/update-desktop-database ] && [ -n "$updatedesktopdb" ]; then
+		chroot "$root/" /usr/bin/update-desktop-database /usr/share/applications 2>/dev/null
 	fi
 	# Mimetypes
-	if [ -f $ROOT/usr/bin/update-mime-database ] && [ -n "$updatemimedb" ]; then
-		chroot "$ROOT/" /usr/bin/update-mime-database /usr/share/mime
+	if [ -f $root/usr/bin/update-mime-database ] && [ -n "$updatemimedb" ]; then
+		chroot "$root/" /usr/bin/update-mime-database /usr/share/mime
 	fi
 	# Icons
-	if [ -f $ROOT/usr/bin/gtk-update-icon-cache ] && [ -n "$updateicondb" ]; then
-		chroot "$ROOT/" /usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor
+	if [ -f $root/usr/bin/gtk-update-icon-cache ] && [ -n "$updateicondb" ]; then
+		chroot "$root/" /usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor
 	fi
 	# Glib schemas
-	if [ -f $ROOT/usr/bin/glib-compile-schemas ] && [ -n "$compile_schemas" ]; then
-		chroot "$ROOT/" /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
+	if [ -f $root/usr/bin/glib-compile-schemas ] && [ -n "$compile_schemas" ]; then
+		chroot "$root/" /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas
 	fi
 	# Kernel modules
-	if [ -f $ROOT/sbin/depmod ] && [ -n "$updatedepmod" ]; then
-		chroot "$ROOT/" /sbin/depmod -a
+	if [ -f $root/sbin/depmod ] && [ -n "$updatedepmod" ]; then
+		chroot "$root/" /sbin/depmod -a
 	fi
 }
 
@@ -70,17 +68,17 @@ install_package() {
 	# Set by receipt: pre_depends() DEPENDS SELF_INSTALL CONFIG_FILES post_install()
 
 	# Create package path early to avoid dependencies loop
-	mkdir -p $TMP_DIR
-	extract_receipt $TMP_DIR $package_file
-	source $TMP_DIR/receipt
+	mkdir -p $tmpdir
+	extract_receipt $tmpdir $package_file
+	source $tmpdir/receipt
 
 	local package_name=$PACKAGE
 	local package_dir="$installed/$package_name"
 	mkdir -p $package_dir
 
 	# Run pre_depends from receipt if it exists
-	if grep -q ^pre_depends $TMP_DIR/receipt; then
-		pre_depends $ROOT
+	if grep -q ^pre_depends $tmpdir/receipt; then
+		pre_depends $root
 	fi
 
 	# Create modifiers and files.list if they do not exist
@@ -100,14 +98,14 @@ install_package() {
 	fi
 
 	newline
-	boldify $(gettext "Installation of :") $package_name
+	boldify $(gettext "Installation of:") $package_name
 	separator
-	eval_gettext "Copying \$package_name... "
-	cp $package_file $TMP_DIR
+	gettext "Copying"; echo -n " $package_name..."
+	cp $package_file $tmpdir
 	status
 
 	# Extract Package
-	cd $TMP_DIR || exit 1
+	cd $tmpdir || exit 1
 	rm receipt
 	spk-archive extract $package_file
 	cd - >/dev/null
@@ -117,7 +115,7 @@ install_package() {
 	if [ -f $package_dir/files.list ]; then
 		for file in $(cat $package_dir/files.list)
 		do
-			grep -q "^$(echo $file | grepesc)$" $TMP_DIR/files.list && continue
+			grep -q "^$(echo $file | grepesc)$" $tmpdir/files.list && continue
 			local modifiers=$(cat $package_dir/modifiers 2> /dev/null; \
 							  fgrep -sl $package_dir */modifiers | cut -d/ -f1)
 			for i in modifiers; do
@@ -130,16 +128,17 @@ install_package() {
 	local check=false
 	local file_list
 	# Create list of all possibly modified files
-	for i in $(fgrep -v [ $TMP_DIR/files.list); do
-		[ -e "$ROOT$i" ] || continue
-		[ -d "$ROOT$i" ] && continue
+	for i in $(fgrep -v [ $tmpdir/files.list); do
+		[ -e "${root}${i}" ] || continue
+		[ -d "${root}${i}" ] && continue
 		file_list="$file_list $i"
 		check=true
 	done
 
 	# Check possibly modified files against other packages file.list
 	if $check; then
-		for pkg in $installed/*; do
+		for pkg in $installed/*
+		do
 		  	[ "$pkg" == "$package_name" ] && continue
 		  	[ -s $pkg/files.list ] || continue
 
@@ -147,7 +146,8 @@ install_package() {
 		  		# $package_name wants to install $file which is already
 		  		# installed from $pkg
 				if grep -q ^$file$ $pkg/files.list; then
-					# Tell $pkg that $package_name is going to overwrite some of its files
+					# Tell $pkg that $package_name is going to overwrite some
+					# of its files
 					if [ -s "$pkg/volatile.cpio.gz" ]; then
 						# We can modify backed up files without notice
 						zcat $pkg/volatile.cpio.gz | cpio -t --quiet | \
@@ -164,7 +164,7 @@ install_package() {
 		done
 	fi
 
-	cd $TMP_DIR || exit 1
+	cd $tmpdir || exit 1
 	cp receipt files.list $package_dir
 
 	# Copy the description if found.
@@ -172,7 +172,7 @@ install_package() {
 
 	# Pre install commands.
 	if grep -q ^pre_install $package_dir/receipt; then
-		pre_install $ROOT
+		pre_install $root
 	fi
 
 	# Handle Config Files from receipt
@@ -186,20 +186,21 @@ install_package() {
 			confs="$confs $(find ${i#/} -type f 2> /dev/null)"
 		done
 
-		echo $confs | cpio -o -H newc --quiet | gzip -9 > $package_dir/volatile.cpio.gz
+		echo $confs | cpio -o -H newc --quiet | gzip -9 > \
+			$package_dir/volatile.cpio.gz
 
 		# keep user configuration files
-		for conf_file in $confs; do
-			[ -e $conf_file ] || continue
-			cp -a $conf_file fs/$conf_file
+		for configfile in $confs; do
+			[ -e $configfile ] || continue
+			cp -a $configfile fs/$configfile
 		done
 		status
 		cd - >/dev/null
 	fi
 
 	# Merge ROOT_FS with Package FS
-	gettext "Installing"; echo -n " $package_name..."
-	cp -a fs/* $ROOT/
+	gettext "Installing in:"; echo -n " $root/"
+	cp -a fs/* $root/
 	status
 
 	# Remove old config files
@@ -217,12 +218,12 @@ install_package() {
 
 	# Remove the temporary directory.
 	gettext "Removing all tmp files... "
-	rm -rf $TMP_DIR
+	rm -rf $tmpdir
 	status
 
 	# Post install commands.
 	if grep -q ^post_install $package_dir/receipt; then
-		post_install $ROOT
+		post_install $root
 	fi
 
  	# Update-desktop-database if needed.
@@ -281,7 +282,7 @@ install_web() {
 
 	cd $CACHE_DIR > /dev/null
 	if [ -f "$package_full.tazpkg" ]; then
-		echo -n "$(colorize "$package_full" 34)"; echo ": $CACHE_DIR)"
+		echo -n "$(colorize "$package_full" 34)"; echo ": $CACHE_DIR"
 		# Check package download was finished
 		if ! tail -c 2k $package_full.tazpkg | fgrep -q 00000000TRAILER; then
 			eval_gettext "Continuing \$package_name download"; newline
@@ -299,7 +300,7 @@ install_web() {
 
 	install_package "$CACHE_DIR/$package_full.tazpkg"
 
-	[ -n "$AUTOEXEC" ] && $package_name $ROOT
+	[ -n "$AUTOEXEC" ] && $package_name $root
 	update_databases
 }
 

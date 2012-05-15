@@ -156,7 +156,7 @@ missing_deps() {
 	fi
 
 	echo -n "$(colorize "$deps" 34) "
-	gettext "missing dep(s) to install."; newline
+	gettext "missing dep(s) to install..."; newline
 
 	# Return true if missing deps
 	[ "$deps" != "0" ]
