@@ -1,0 +1,109 @@
+#!/bin/sh
+#
+# Spk-ls - List SliTaz packages and files. Read the README before adding or
+# modifing any code in spk!
+#
+# Copyright (C) SliTaz GNU/Linux - BSD License
+# Author: See AUTHORS files
+#
+#. /usr/lib/slitaz/libspk.sh
+. lib/libspk.sh
+
+#
+# Functions
+#
+
+# Help and usage
+usage() {
+	name=$(basename $0)
+	cat << EOT
+
+$(boldify $(gettext "Usage:")) $name [packages|--options]
+
+$(gettext "List packages or installed files by packages")
+
+$(boldify $(gettext "Options:"))
+  --count     $(gettext "Display the number of installed packages")
+  --mirror    $(gettext "List all the packages on mirror")
+  --blocked   $(gettext "List all blocked packages")
+  --short     ls: $(gettext "Short list of installed packages")
+  --debug     $(gettext "Display some usefull debug information")
+
+$(boldify $(gettext "Examples:"))
+  $name package1 package2 packageN
+  $name --count
+
+EOT
+	exit 0
+}
+
+#
+# Handle --options
+#
+
+for opt in $@
+do
+	case "$opt" in
+		*usage|*help) usage ;;
+		--count)
+			count_installed
+			count_mirrored
+			exit 0 ;;
+		--mirror)
+			IFS="|"
+			cat $pkgsdesc | while read package version desc category
+			do
+				echo ""
+				gettext "Package    :"; echo " $package"
+				gettext "Version    :"; echo "$version"
+				gettext "Short desc :"; echo "$desc"
+			done && unset IFS
+			separator
+			count_mirrored
+			echo "" && exit 0 ;;
+		--blocked)
+			if [ -f "$blocked" ]; then
+				cat $blocked
+			else
+				gettext "No blocked packages"; echo ""
+			fi && exit 0 ;;
+		--short)
+			ls -1 $installed
+			boldify $(count_installed)
+			exit 0 ;;
+		--*) continue ;;
+		*)
+			# List installed files by the package.
+			count=0
+			for pkg in $@
+			do
+				[ -f "$installed/$pkg/files.list" ] || continue
+				count=$(($count + 1))
+				[ "$count" == 1 ] && newline
+				boldify $(gettext "Installed files by"; echo " $pkg")
+				separator
+				cat $installed/$pkg/files.list
+				files=$(wc -l $installed/$pkg/files.list | cut -d " " -f 1)
+				separator
+				gettext "Installed files by"; echo " $pkg : $files"
+				newline
+			done && exit 0 ;;
+	esac
+done
+
+#
+# Parse all installed pkgs receipt.
+#
+
+boldify "$(gettext "Installed packages")"
+separator
+for pkg in $installed/*
+do
+	unset_receipt
+	. $pkg/receipt
+	newline
+	receipt_info
+done
+separator
+count_installed && newline
+exit 0

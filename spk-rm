@@ -20,6 +20,8 @@ usage() {
 
 $(boldify $(gettext "Usage:")) $name [packages|--options]
 
+$(gettext "Remove installed packages and ther dependencies")
+
 $(boldify $(gettext "Options:"))
   --confirm   $(gettext "Ask before removing any packages")
   --verbose   $(gettext "Be more verbose when removing files")
@@ -158,7 +160,7 @@ remove() {
 #
 
 case "$1" in
-	""|usage|help) usage ;;
+	""|*usage|*help) usage ;;
 esac
 
 #
@@ -196,5 +198,4 @@ do
 	separator
 	echo "" && log "Removed package: $pkg"
 done
-
 exit 0
