@@ -39,12 +39,7 @@ extract_package() {
 	status
 
 	gettext "Extracting the pseudo fs... "
-	if [ -f fs.cpio.lzma ]; then
-		echo -n "(lzma) "
-		unlzma -c fs.cpio.lzma | cpio -idm --quiet && rm fs.cpio.lzma
-	elif [ -f fs.cpio.gz ]; then
-		zcat fs.cpio.gz | cpio -idm --quiet && rm fs.cpio.gz
-	fi
+	unlzma -c fs.cpio.lzma | cpio -idm --quiet && rm fs.cpio.lzma
 	status
 }
 

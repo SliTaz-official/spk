@@ -14,7 +14,7 @@
 mirrorurl="${root}${PKGS_DB}/mirror"
 installed="${root}${PKGS_DB}/installed"
 pkgsdesc="${root}${PKGS_DB}/packages.desc"
-pkgsmd5="${root}${PKGS_DB}/packages.md5"
+pkgsmd5="${root}${PKGS_DB}/packages.$SUM"
 # ????do we need packages.equiv????
 blocked="${root}${PKGS_DB}/blocked.list"
 activity="${root}${PKGS_DB}/activity"

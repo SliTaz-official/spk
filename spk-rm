@@ -62,14 +62,15 @@ remove() {
 	. $installed/$pkg/receipt
 
 	if [ -n "$altered" ]; then
-		eval_gettext "The following packages depend on \$PACKAGE:"; echo
+		gettext "The following packages depend on"; boldify " $PACKAGE:"
 		for i in $altered; do
 			echo "  $i"
 		done
 	fi
 	refresh=$(cd $installed ; grep -sl ^$PACKAGE$ */modifiers)
 	if [ -n "$refresh" ]; then
-		eval_gettext "The following packages have been modified by \$PACKAGE:"; echo
+		gettext "The following packages have been modified by"
+		boldify " $PACKAGE:"
 		for i in $refresh; do
 			echo "  ${i%/modifiers}"
 		done
@@ -87,7 +88,7 @@ remove() {
 		for i in $altered; do
 			if [ -d "$installed/$i" ]; then
 				# TODO: use spk-rm
-				echo "tazpkg remove $i --root=$root"
+				echo "spk-rm $i --root=$root"
 			fi
 		done
 	fi
@@ -101,9 +102,9 @@ remove() {
 	gettext "Removing all installed files..."
 	[ "$verbose" ] && newline
 	if [ -f $installed/$PACKAGE/modifiers ]; then
-	    for file in `cat $installed/$PACKAGE/files.list`
+	    for file in $(cat $installed/$PACKAGE/files.list)
 	    do
-			for mod in `cat $installed/$PACKAGE/modifiers`
+			for mod in $(cat $installed/$PACKAGE/modifiers)
 			do
 				[ -f $installed/$mod/files.list ] && \
 					[ $(grep "^$(echo $file | grepesc)$" $installed/$mod/files.list | wc -l) -gt 1 ] \
@@ -115,7 +116,9 @@ remove() {
 	else
 		for file in $(cat $installed/$PACKAGE/files.list)
 		do
-			[ "$verbose" ] && (gettext "Removing:"; echo -n " ${root}${file}")
+			if [ "$verbose" ]; then
+				gettext "Removing:"; echo -n " ${root}${file}"
+			fi
 			remove_file ${root}${file}
 			[ "$verbose" ] && status
 		done
@@ -131,8 +134,7 @@ remove() {
 	gettext "Removing package receipt..."
 	rm -rf $installed/$PACKAGE
 	status
-	sed -i "/ $PACKAGE-$VERSION$EXTRAVERSION$/d" \
-		${root}${PKGS_DB}/installed.$SUM 2> /dev/null
+	sed -i "/ $PACKAGE-${VERSION}${EXTRAVERSION}$/d" $pkgsmd5 2> /dev/null
 
 	# Mofified ?
 	if [ "$refresh" ]; then
@@ -150,7 +152,7 @@ remove() {
 			fi
 			# TODO: use spk-add
 			rm -r $installed/$i
-			tazpkg -gi ${i%/modifiers} --forced --root=$root
+			spk-add ${i%/modifiers} --forced --root=$root
 		done
 	fi
 }
