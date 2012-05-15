@@ -30,7 +30,7 @@ $(boldify $(gettext "Options:"))
   --rm        $(gettext "Remove installed packages")
   --block     $(gettext "Add packages to the blocked list")
   --unblock   $(gettext "Remove packages from the blocked list")
-  --root      $(gettext "Set the root file system path")
+  --root=     $(gettext "Set the root file system path")
   --debug     $(gettext "Display some usefull debug information")
 
 $(boldify $(gettext "Examples:"))
@@ -48,20 +48,24 @@ EOT
 case "$1" in
 	""|*usage|*help) usage ;;
 	info)
+		cache="$(du -sh $CACHE_DIR | awk '{print $1 " " $2}')"
 		newline
 		boldify "Spk Info"
 		separator
 		gettext "Database   :"; echo " $installed"
+		gettext "Cache info :"; echo " $cache"
 		gettext "Mirror URL :"; echo " $(cat $mirrorurl)"
 		count_installed
 		count_mirrored
 		separator
 		newline && exit 0 ;;
 	activity)
+		# --head=NB
+		: ${head=18}
 		newline
 		boldify "Spk Activity"
 		separator
-		cat $activity
+		cat $activity | head -n $head
 		separator && newline
 		exit 0 ;;
 esac

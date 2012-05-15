@@ -87,8 +87,7 @@ remove() {
 		fi
 		for i in $altered; do
 			if [ -d "$installed/$i" ]; then
-				# TODO: use spk-rm
-				echo "spk-rm $i --root=$root"
+				spk-rm $i --root=$root
 			fi
 		done
 	fi
