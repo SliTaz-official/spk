@@ -250,7 +250,7 @@ pack() {
 		done < files.list > $CHECKSUM
 		status
 		UNPACKED_SIZE=$(du -chs fs receipt files.list $CHECKSUM \
-			description.txt 2> /dev/null | awk \
+			description.txt 2> /dev/null | busybox awk \
 			'{ sz=$1 } END { print sz }')
 		# Build cpio archives.
 		gettext "Compressing the fs... "
@@ -258,7 +258,7 @@ pack() {
 		rm -rf fs
 		status
 		PACKED_SIZE=$(du -chs fs.cpio.lzma receipt files.list \
-			$CHECKSUM description.txt 2> /dev/null | awk \
+			$CHECKSUM description.txt 2> /dev/null | busybox awk \
 			'{ sz=$1 } END { print sz }')
 		gettext "Updating receipt sizes..."
 		sed -i s/^PACKED_SIZE.*$// receipt

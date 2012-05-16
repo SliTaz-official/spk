@@ -64,9 +64,9 @@ remove() {
 
 	# Reverse dep.
 	if [ "$altered" ]; then
-		gettext "The following packages depend on"; boldify " $PACKAGE"
+		gettext "The following packages depend on"; colorize " $pkg" 31
 		for i in $altered; do
-			echo "    $i"
+			echo "    $(colorize "$i" 32)"
 		done
 	fi
 
@@ -87,28 +87,14 @@ remove() {
 	# Remove all files
 	gettext "Removing all installed files..."
 	[ "$verbose" ] && newline
-	if [ -f $installed/$PACKAGE/modifiers ]; then
-	    for file in $(cat $installed/$PACKAGE/files.list)
-	    do
-			for mod in $(cat $installed/$PACKAGE/modifiers)
-			do
-				[ -f $installed/$mod/files.list ] && \
-					[ $(grep "^$(echo $file | grepesc)$" $installed/$mod/files.list | wc -l) -gt 1 ] \
-					&& continue 2
-			done
-			[ "$verbose" ] && (gettext "Removing:"; echo -n " ${root}${file}")
-			remove_file ${root}${file}
-	    done
-	else
-		for file in $(cat $installed/$PACKAGE/files.list)
-		do
-			if [ "$verbose" ]; then
-				gettext "Removing:"; echo -n " ${root}${file}"
-			fi
-			remove_file ${root}${file}
-			[ "$verbose" ] && status
-		done
-	fi
+	for file in $(cat $installed/$PACKAGE/files.list)
+	do
+		if [ "$verbose" ]; then
+			gettext "Removing:"; echo -n " ${root}${file}"
+		fi
+		remove_file ${root}${file}
+		[ "$verbose" ] && status
+	done
 	[ ! "$verbose" ] && status
 
 	# Handle post_remove
@@ -119,17 +105,17 @@ remove() {
 	# Remove package receipt.
 	gettext "Removing package receipt..."
 	rm -rf $installed/$PACKAGE
+	sed -i "/ $PACKAGE-${VERSION}${EXTRAVERSION}$/d" $pkgsmd5
 	status
-	sed -i "/ $PACKAGE-${VERSION}${EXTRAVERSION}$/d" $pkgsmd5 2> /dev/null
 
 	separator && newline
 
 	# Do we have packages depending on $pkg to remove ?
 	if [ "$altered" ]; then
 		if [ "$confirm" ]; then
-			gettext "Remove packages depending on:"; echo -n " $PACKAGE"
+			gettext "Remove packages depending on:"; echo -n " $pkg"
 			if ! confirm; then
-				gettext "Keeping packages depending on:"; echo " $PACKAGE"
+				gettext "Keeping packages..."; newline
 				newline && continue
 			fi
 		fi
@@ -140,24 +126,26 @@ remove() {
 		done
 	fi
 
-	# Handle mofified packages
+	# Handle modified packages
 	modified=$(cd $installed; grep -sl ^$pkg$ */modifiers)
 	if [ "$modified" ]; then
-		gettext "Following packages was modified by"; boldify " $pkg"
-		for i in $modified; do
-			echo "  ${i%/modifiers}"
+		for i in $modified
+		do
+			gettext "Removed package  :"; boldify " $pkg"
+			gettext "Modified package :"; colorize " ${i%/modifiers}" 31
 			# Remove package from the modifiers list
 			sed -i "/^${pkg}$/"d $installed/$i
-		done
-		if [ "$confirm" ]; then
-			gettext "Reinstall packages modified by:"; echo -n " $PACKAGE"
-			if ! confirm; then
-				gettext "Keeping packages modified by:"; echo " $PACKAGE"
-				newline && continue
+			# Reinstall modified packages
+			if [ "$confirm" ]; then
+				gettext "Confirm reinstallation of:"
+				echo -n " ${i%/modifiers}"
+				if ! confirm; then
+					gettext "Reinstallation cancelled"; newline
+					newline && continue
+				else
+					gettext "Reinsalling modified package..."; newline
+				fi
 			fi
-		fi
-		# Reinstall modified packages
-		for i in $modified; do
 			spk-add ${i%/modifiers} --forced --root=$root
 		done
 	fi
