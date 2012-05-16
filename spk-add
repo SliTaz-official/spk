@@ -124,7 +124,7 @@ install_package() {
 			files_to_remove="$files_to_remove $file"
 		done
 	fi
-	[ "$debug" ] && echo "DEBUG: file_to_remove: $files_to_remove"
+	debug "file_to_remove: $files_to_remove"
 
 	# Create list of all possibly modified files
 	local file_list
@@ -133,10 +133,11 @@ install_package() {
 		[ -d "${root}${i}" ] && continue
 		file_list="$file_list $i"
 	done
-	[ "$debug" ] && echo "DEBUG: file_list is set"
+	
+	debug "file_list is set"
 
 	# Check possibly modified files against other packages files.list
-	[ "$debug" ] && echo "DEBUG: check modified files"
+	debug "check modified files"
 	for file in $file_list
 	do
 		filegrep=$(egrep ^${file}$ $installed/*/files.list)
@@ -153,8 +154,7 @@ install_package() {
 			fi
 			# Add $pkg to the modifiers list og $name
 			if ! egrep -q ^${package_name}$ $installed/$name/modifiers; then
-				[ "$debug" ] && \
-					echo -en "\nDEBUG: Added $pkg to: $name/modifiers"
+				debug "Added $pkg to: $name/modifiers"
 				echo "$package_name" >> $installed/$name/modifiers
 			fi
 			status
