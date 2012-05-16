@@ -130,29 +130,6 @@ remove() {
 			fi
 		done
 	fi
-
-	# Handle modified packages
-	modified=$(cd $installed; grep -sl ^$pkg$ */modifiers)
-	if [ "$modified" ]; then
-		for i in $modified; do
-			gettext "Removed package  :"; boldify " $pkg"
-			gettext "Modified package :"; colorize " ${i%/modifiers}" 31
-			# Remove package from the modifiers list
-			sed -i "/^${pkg}$/"d $installed/$i
-			# Reinstall modified packages
-			if [ "$confirm" ]; then
-				gettext "Confirm reinstallation of:"
-				echo -n " ${i%/modifiers}"
-				if ! confirm; then
-					gettext "Reinstallation cancelled"; newline
-					newline && continue
-				else
-					gettext "Reinsalling modified package..."; newline
-				fi
-			fi
-			spk-add ${i%/modifiers} --forced --root=$root
-		done
-	fi
 }
 
 #
