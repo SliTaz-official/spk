@@ -140,24 +140,21 @@ install_package() {
 	debug "check modified files"
 	for file in $file_list
 	do
-		filegrep=$(egrep ^${file}$ $installed/*/files.list)
+		local filegrep=$(egrep ^${file}$ $installed/*/files.list)
 		if [ "$filegrep" ]; then
 			local list=$(echo $filegrep | cut -d ":" -f 1)
-			local name=$(basename $(dirname $list))
-			[  "$pkg" == "$name" ] && continue
-			echo -n "Modified package: $name"
-			# Tell $name that $pkg is going to overwrite some of its files
-			if [ -s "$installed/$name/volatile.cpio.gz" ]; then
-				# We can modify backed up files without notice
-				zcat $installed/$name/volatile.cpio.gz | cpio -t --quiet | \
-				grep -q "^${file#/}$" && continue
-			fi
-			# Add $pkg to the modifiers list og $name
-			if ! egrep -q ^${package_name}$ $installed/$name/modifiers; then
-				debug "Added $pkg to: $name/modifiers"
-				echo "$package_name" >> $installed/$name/modifiers
-			fi
-			status
+			for pkg_file in $list; do
+				local name=$(basename $(dirname $pkg_file))
+				[  "$pkg" == "$name" ] && continue 2
+				eval_gettext "Conflict package: \$name"; newline
+				# If confirm is set, ask to remove
+				if ! $confirm || gettext "Remove " && confirm; then
+					spk-rm $name
+				else
+					eval_gettext "Warning! /$file will be overwritten!"; newline
+					eval_gettext "If you remove /$package_name, be sure to reinstall $name"; newline
+				fi
+			done
 		fi
 	done
 
