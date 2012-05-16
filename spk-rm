@@ -50,8 +50,12 @@ remove_file() {
 # Remove a single package
 remove() {
 	altered=""
-	for i in $(ls $installed)
-	do
+	boldify $(gettext "Removing"; echo " $pkg")
+	separator
+	[ "$verbose" ] && echo "DB: $installed"
+
+	# Reverse deps
+	for i in $(ls $installed); do
 		[ -f $installed/$i/receipt ] || continue
 		unset_receipt
 		. $installed/$i/receipt
@@ -62,7 +66,6 @@ remove() {
 	unset_receipt
 	. $installed/$pkg/receipt
 
-	# Reverse dep.
 	if [ "$altered" ]; then
 		gettext "The following packages depend on"; colorize " $pkg" 31
 		for i in $altered; do
@@ -85,9 +88,11 @@ remove() {
 	fi
 
 	# Remove all files
-	gettext "Removing all installed files..."
+	fileslist=$installed/$PACKAGE/files.list
+	gettext "Removing installed files:"
+	echo -n " $(wc -l $fileslist | cut -d " " -f 1)"
 	[ "$verbose" ] && newline
-	for file in $(cat $installed/$PACKAGE/files.list)
+	for file in $(cat $fileslist)
 	do
 		if [ "$verbose" ]; then
 			gettext "Removing:"; echo -n " ${root}${file}"
@@ -129,8 +134,7 @@ remove() {
 	# Handle modified packages
 	modified=$(cd $installed; grep -sl ^$pkg$ */modifiers)
 	if [ "$modified" ]; then
-		for i in $modified
-		do
+		for i in $modified; do
 			gettext "Removed package  :"; boldify " $pkg"
 			gettext "Modified package :"; colorize " ${i%/modifiers}" 31
 			# Remove package from the modifiers list
@@ -180,9 +184,6 @@ do
 	fi
 	count=$(($count + 1))
 	[ "$count" == 1 ] && newline
-	boldify $(gettext "Removing"; echo " $pkg")
-	separator
-	[ "$verbose" ] && echo "DB: $installed"
 	remove
 	log "Removed package: $pkg"
 done
