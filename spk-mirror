@@ -1,0 +1,269 @@
+#!/bin/sh
+#
+# Spk-mirror - Handle SliTaz packages mirrors. Read the README before
+# adding or modifing any code in spk!
+#
+# Copyright (C) SliTaz GNU/Linux - BSD License
+# Author: See AUTHORS files
+#
+. /usr/lib/slitaz/libspk.sh
+
+# NOTE: I want to use 'extra' mirrors since we can add any extra mirror
+# URL's and not only undigest. See also undigest command - Pankso
+
+#
+# Functions
+#
+
+# Help and usage
+usage() {
+	name=$(basename $0)
+	cat << EOT
+
+$(boldify $(gettext "Usage:")) $name [urls|info|--options]
+
+$(gettext "Handle SliTaz packages mirrors")
+
+$(boldify $(gettext "Options:"))
+  --list
+  --rm
+  --nodb
+  --extra
+  --debug
+
+$(boldify $(gettext "Examples:"))
+  $name http://mirror.slitaz.org/
+  $name /path/to/packages --nodb --extra
+
+EOT
+	exit 0
+}
+
+# Check if we have packages ID and lists on mirror.
+check_mirror() {
+	for file in packages.list packages.$SUM packages.desc ID
+	do
+		gettext "Checking file:"; echo -n " $file"
+		if ! wget -q -s -T 6 ${1}${list} 2>/dev/null; then
+			newline
+			gettext "Unable to reach:"; colorize " $file" 31
+			newline && return 1
+		fi
+		status
+	done
+}
+
+# Get extra mirror DB path
+extra_db() {
+	db=$(echo ${url#*://} | cut -d "/" -f1 )
+	debug "extra mirror: $url"
+	debug "extra DB: $db"
+}
+
+# Add a package to lists
+addto_list() {
+	cd $pkgsdir
+	echo "$PACKAGE-${VERSION}${EXTRAVERSION}" >> packages.list
+	$CHECKSUM $(basename $pkg) >> packages.$SUM
+	#
+	# Add PACKED_SIZE UNPACKED_SIZE to be used to know packages size
+	# before installing ??? --> actually done via packages.txt
+	#
+	cat >> packages.desc << EOT
+$PACKAGE | ${VERSION}${EXTRAVERSION} | $SHORT_DESC | $CATEGORY | $WEBSITE"
+EOT
+	# packages.equiv is used by tazpkg install to check depends.
+	touch packages.equiv
+	for i in $PROVIDE; do
+		dest=""
+		echo $i | fgrep -q : && dest="${i#*:}:"
+		if grep -qs ^${i%:*}= packages.equiv; then
+			sed -i "s/^${i%:*}=/${i%:*}=${dest}$PACKAGE /" packages.equiv
+		else
+			echo "${i%:*}=${dest}$PACKAGE" >> packages.equiv
+		fi
+	done
+	# files.list provides a list of all packages files.
+	cat $tmpdir/files.list | sed s/^/"$PACKAGE: \0"/ >> $pkgsdir/files.list
+}
+
+#
+# Commands
+#
+
+cmd=$1
+[ -d "$cmd" ] && cmd=continue
+
+case "$cmd" in
+	*usage|*help) usage ;;
+	http://*|ftp://|'continue') continue ;;
+	undigest)
+		echo "TODO: enable official undigest repo" ;;
+	""|--list)
+		extra=0
+		excolor=32
+		newline
+		boldify "Mirror info"
+		separator
+		gettext "Main URL :"
+		boldify " $(cat $mirrorurl)"
+		if [ -f "$mirrors" ]; then
+			nb=$(cat $mirrors | wc -l)
+			gettext "Mirrors  :"; colorize " $nb " $excolor
+		fi
+		if [ -d "$extradb" ]; then
+			extra=$(ls $extradb | wc -l)
+		fi
+		[ "$extra" != 0 ] || excolor=31
+		gettext "Extra    :"; colorize " $extra" $excolor
+		separator
+		newline
+		if [ "$list" ]; then
+			boldify $(gettext "Official mirrors")
+			separator
+			cat $mirrors
+			separator && newline
+			if [ "$extra" != "0" ]; then
+				boldify $(gettext "Extra mirrors")
+				separator
+				cat $extradb/*/mirror
+				separator && newline
+			fi
+		fi
+		exit 0 ;;
+esac
+
+#
+# Handle all urls
+#
+
+count=0
+
+for url in $@
+do
+	[ -d "$url" ] && url="dir:$url"
+	case "$url" in
+		http://*|ftp://)
+			[ "$count" == 0 ] && newline
+			count=$(($count + 1))
+			url="${url%/}/"
+			debug "checking: $url"
+			# Remove extra on --rm
+			if [ "$rm" ]; then
+				extra_db
+				if [ -d "$extradb/$db" ]; then
+					gettext "Removing extra mirror:"
+					echo -n " $(boldify "$db")"
+					rm -rf $extradb/$db && status
+				else
+					gettext "Not an extra mirror:"; colorize " $db" 31
+				fi
+				newline && continue
+			fi
+			# Official mirror
+			if fgrep -q "$url" $mirrors; then
+				gettext "Enabling: official mirror"; newline
+				gettext "Architecture:"; echo " $SLITAZ_ARCH"
+				# Handle arch type
+				case "$SLITAZ_ARCH" in
+					arm|x86_64) arch="$SLITAZ_ARCH/" ;;
+					i486) arch="/" ;;
+				esac
+				url=${url}packages/${SLITAZ_RELEASE}${arch}
+				echo "URL: $(boldify "$url")"
+				echo "$url" > $mirrorurl
+				newline && continue
+			fi
+			# Extra mirror
+			extra_db
+			if [ -d "$extradb/$db" ]; then
+				gettext "Extra mirror already exist"; newline
+				echo -n "DB:"; boldify " $db"
+			else
+				gettext "Enabling: extra mirror"; newline
+				echo "URL: $(boldify "$url")"
+				if ! check_mirror $url; then
+					continue
+				fi
+				mkdir -p $extradb/$db
+				echo "$url" > $extradb/$db/mirror
+				gettext "New extra mirror is ready to use"; newline
+			fi
+			newline ;;
+		dir:*)
+			# Handle local mirror
+			dir=${url#dir:}
+			pkgsdir=${dir%/}
+			debug "dir: $dir"
+			nb=$(ls $pkgsdir/*.tazpkg 2>/dev/null | wc -l)
+			if [ "$nb" == 0 ]; then
+				gettext "No packages found in:"; boldify " $pkgsdir"
+				continue
+			fi
+			newline
+			gettext "Directory:"; boldify " $pkgsdir"
+			gettext "Packages :"; colorize " $nb" 32
+			cd $pkgsdir
+			if [ ! "$nodb" ]; then
+				time=$(date +%s)
+				rm -f packages.* ID
+				newline
+				boldify $(gettext "Creating packages lists")
+				separator
+				for pkg in $pkgsdir/*.tazpkg
+				do
+					gettext "Extracting data:"; echo -n " $(basename $pkg)"
+					mkdir -p $tmpdir
+					extract_receipt $tmpdir $pkg
+					extract_fileslist $tmpdir $pkg
+					source $tmpdir/receipt
+					addto_list && status
+					unset_receipt
+					rm -rf $tmpdir
+				done
+				# files.list.lzma
+				gettext "Compressing the files.list..."
+				lzma e files.list files.list.lzma
+				rm -f files.list
+				status
+				# ID
+				gettext "Creating uniq identity ID..."
+				$CHECKSUM packages.$SUM | cut -d ' ' -f 1 > ID
+				status
+				# Summary
+				separator
+				time=$(($(date +%s) - $time))
+				echo -n "$nb "
+				gettext "packages added in"
+				echo " ${time}s ($(date "+%Y%m%d %H:%M"))"
+			fi
+			newline
+			# Handle --extra: Use local repo as extra mirror with symlinks
+			# to packages lists.
+			if [ "$extra" ]; then
+				boldify $(gettext "Enabling extra local mirror")
+				separator
+				db=$extradb/local
+				debug "database: $db"
+				mkdir -p $db && rm -f $db/*
+				echo "$pkgsdir/" > $db/mirror
+				for list in packages.*
+				do
+					gettext "Linking:"; echo -n " $list"
+					ln -s $pkgsdir/$list $db/$list
+					status
+				done
+				gettext "Copying: ID (uniq identity)"
+				cp $pkgsdir/ID $db && status
+				separator && newline
+			fi ;;
+		--*) continue ;;
+		*)
+			[ "$count" == 0 ] && newline
+			count=$(($count + 1))
+			gettext "Can't handle:"
+			colorize " $url" 31 && newline ;;
+	esac
+done
+
+exit 0
