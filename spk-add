@@ -35,6 +35,13 @@ EOT
 	exit 0
 }
 
+# Log install messages
+log_install() {
+	debug "log_install: $logdir/$pkg/install.log"
+	mkdir -p $logdir/$pkg
+	tee $logdir/$pkg/install.log
+}
+
 # Update system databases
 update_databases() {
 	if [ -f $root/usr/bin/update-desktop-database ] && [ -n "$updatedesktopdb" ]; then
@@ -90,7 +97,7 @@ install_package() {
 		newline
 	fi
 
-	boldify $(gettext "Installation of:") $package_name
+	boldify $(gettext "Adding"; echo " $package_name")
 	separator
 	gettext "Copying"; echo -n " $package_name..."
 	cp $package_file $tmpdir
@@ -244,8 +251,8 @@ install_package() {
 		updatedepmod=yes
 	fi
 	separator
-	echo -n "$package_name ({$VERSION}${EXTRAVERSION})"
-	gettext "is installed."; newline
+	echo -n "$package_name ${VERSION}${EXTRAVERSION} "
+	gettext "is installed"; newline
 	newline
 }
 
@@ -363,7 +370,7 @@ do
 	case "$pkg" in
 		*.tazpkg|*.spk)
 			count=$(($count + 1))
-			install_local $pkg ;;
+			install_local $pkg | log_install ;;
 		*.deb|.rmp)
 			echo "TODO: spk-convert then install" ;;
 		*.*) gettext "WARNING: Not a valid package:"; echo " $pkg" ;;
@@ -371,7 +378,7 @@ do
 		*)
 			[ "$forced" ] || check_installed $pkg
 			count=$(($count + 1))
-			install_web $pkg ;;
+			install_web $pkg | log_install ;;
 	esac
 done
 

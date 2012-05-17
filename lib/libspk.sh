@@ -17,6 +17,7 @@ pkgsdesc="${root}${PKGS_DB}/packages.desc"
 pkgsmd5="${root}${PKGS_DB}/packages.$SUM"
 blocked="${root}${PKGS_DB}/blocked.list"
 activity="${root}${PKGS_DB}/activity"
+logdir="${root}/var/log/spk"
 
 #
 # Sanity checks

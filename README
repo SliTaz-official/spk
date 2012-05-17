@@ -31,7 +31,7 @@ functions:
 LibSpk
 -------------------------------------------------------------------------------
 Libspk provides base functions and internal variables used by almost all spk-tools.
-Libspk must be installed vis 'make install-lib' to develop spk-tools.
+Libspk must be installed via 'make install-lib' to develop spk-tools.
 
 	* Source: libtaz.sh, libpkg.sh, slitaz.conf
 	* Internal Spk variables (lowercase, not configurable)
@@ -45,6 +45,7 @@ Some random and useful notes.
 
 	* packages.desc format: package | 1.0 | desc | category | website
 	* packages.md5 format : de9f76250657000958ee0120d376613e  package-1.0.tazpkg
+	* log package/install.log and package/up.log ti keep trace
 	* ...
 
 Since we use latest libtaz.sh, slitaz.conf and libpkg.sh code you must install
