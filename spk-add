@@ -6,10 +6,9 @@
 # Copyright (C) SliTaz GNU/Linux - BSD License
 # Author: See AUTHORS files
 #
-#. /usr/lib/slitaz/libspk.sh
-. lib/libspk.sh
+. /usr/lib/slitaz/libspk.sh
 
-tmpdir="/tmp/$RANDOM"
+tmpdir="/tmp/spk/$RANDOM"
 
 #
 # Functions
@@ -81,17 +80,6 @@ install_package() {
 		pre_depends $root
 	fi
 
-	# Create modifiers and files.list if they do not exist
-	# Why ? If missing files.list it's meta packages.
-	#touch $package_dir/modifiers
-	#touch $package_dir/files.list
-
-	# Add package checksum to $installed.$SUM
-	sed -i "/ $(basename $package_dir)$/d" $installed.$SUM 2> /dev/null
-	cd $(dirname $package_file) || exit 1
-	$CHECKSUM $(basename $package_file) >> $installed.$SUM
-	cd - >/dev/null
-
 	# Resolve package deps.
 	if missing_deps $package_name $DEPENDS; then
 		install_deps $package_name $DEPENDS
@@ -103,6 +91,13 @@ install_package() {
 	gettext "Copying"; echo -n " $package_name..."
 	cp $package_file $tmpdir
 	status
+
+	# Add package checksum to $installed.$SUM
+	[ "$verbose" ] && gettext "Adding package to:"; \
+		echo -n " $(basename $installed.$SUM)"
+	sed -i "/$(basename $package_file)/"d $installed.$SUM
+	$CHECKSUM $(basename $package_file) >> $installed.$SUM
+	[ "$verbose" ] && status
 
 	# Extract Package
 	cd $tmpdir || exit 1
@@ -133,7 +128,7 @@ install_package() {
 		[ -d "${root}${i}" ] && continue
 		file_list="$file_list $i"
 	done
-	
+
 	debug "file_list is set"
 
 	# Check possibly modified files against other packages files.list
@@ -320,7 +315,7 @@ install_deps() {
 				if [ ! -f "$PKGS_DB/packages.list" ]; then
 					tazpkg recharge
 				fi
-				get-install $pkg
+				spk-add $pkg
 			fi
 		done
 	else

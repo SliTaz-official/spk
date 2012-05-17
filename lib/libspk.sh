@@ -79,6 +79,10 @@ download() {
 			echo "${mirror%/}/$package"
 			wget -c ${mirror%/}/$package ;;
 	esac
+	if [ ! -f "$package" ]; then
+		echo "ERROR: Missing package $package"
+		exit 1
+	fi
 }
 
 # Assume package name is valid
