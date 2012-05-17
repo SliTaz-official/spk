@@ -7,6 +7,7 @@
 # Author: See AUTHORS files
 #
 . /usr/lib/slitaz/libspk.sh
+#. lib/libspk.sh
 
 tmpdir="/tmp/spk/$RANDOM"
 
@@ -82,10 +83,20 @@ install_package() {
 
 	# Resolve package deps.
 	if missing_deps $package_name $DEPENDS; then
-		install_deps $package_name $DEPENDS
+		if [ "$confirm" ]; then
+			gettext "Install missing dependencies"
+			if ! confirm; then
+				gettext "WARNING: Any dependencies installed"; newline
+			else
+				install_deps $package_name $DEPENDS
+			fi
+		else
+			install_deps $package_name $DEPENDS
+		fi
+	else
+		newline
 	fi
 
-	newline
 	boldify $(gettext "Installation of:") $package_name
 	separator
 	gettext "Copying"; echo -n " $package_name..."
@@ -93,9 +104,10 @@ install_package() {
 	status
 
 	# Add package checksum to $installed.$SUM
-	[ "$verbose" ] && gettext "Adding package to:"; \
-		echo -n " $(basename $installed.$SUM)"
-	sed -i "/$(basename $package_file)/"d $installed.$SUM
+	if [ "$verbose" ]; then
+		gettext "Incrementing:"; echo -n " $(basename $installed.$SUM)"
+	fi
+	sed -i "/$(basename $package_file)/"d $installed.$SUM 2>/dev/null
 	$CHECKSUM $(basename $package_file) >> $installed.$SUM
 	[ "$verbose" ] && status
 
@@ -275,7 +287,7 @@ install_web() {
 		gettext "Using cache:"; echo " $(colorize "$package_full" 34)"
 		# Check package download was finished
 		if ! tail -c 2k $package_full.tazpkg | fgrep -q 00000000TRAILER; then
-			eval_gettext "Continuing \$package_name download"; newline
+			gettext "Continuing download of:"; echo " $package_name"
 			download "$package_full.tazpkg"
 		fi
 		# Check that the package has the correct checksum
@@ -284,46 +296,33 @@ install_web() {
 		#	download "$package_full.tazpkg"
 		#fi
 	else
-		newline
-		download "$package_full.tazpkg"
+		newline && download "$package_full.tazpkg"
 	fi
 
 	install_package "$CACHE_DIR/$package_full.tazpkg"
 
-	[ -n "$AUTOEXEC" ] && $package_name $root
+	#[ "$AUTOEXEC" ] && chroot $root/ $package_name
+	[ "$AUTOEXEC" ] && $package_name $root
 	update_databases
 }
 
-# Install all missing deps. Auto install or ask user then install all missing
-# deps from local dir, cdrom, media or from the mirror. In case we want to
-# install packages from local, we need a packages.list to find the version.
-# Parameters: package List of deps to install
+# Install all missing deps of a package.
+# Usage: install_deps package DEPENDS
 install_deps() {
 	local package=$1
 	shift
 	local deps="$@"
-
-	gettext "Install all missing dependencies? "
-
-	# Print Yes/No and get result
-	if $AUTO_INSTALL_DEPS || confirm; then
-		for pkgorg in $deps; do
-			local pkg=$(equivalent_pkg $pkgorg)
-			# Check if package is not installed
-			if [ ! -d "$installed/$pkg" ]; then
-				if [ ! -f "$PKGS_DB/packages.list" ]; then
-					tazpkg recharge
-				fi
-				spk-add $pkg
+	for pkgorg in $deps; do
+		local pkg=$(equivalent_pkg $pkgorg)
+		# Check if package is not installed
+		if [ ! -d "$installed/$pkg" ]; then
+			if [ ! -f "$PKGS_DB/packages.list" ]; then
+				#spk-up --recharge-only
+				tazpkg recharge
 			fi
-		done
-	else
-		newline
-		boldify $(gettext "Package:") $package
-		gettext \
-			"Dependencies unresolved. Installed but will probably not work."
-		newline && newline
-	fi
+			spk-add $pkg
+		fi
+	done
 }
 
 #

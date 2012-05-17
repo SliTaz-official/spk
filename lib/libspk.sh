@@ -150,7 +150,7 @@ missing_deps() {
 		fi
 	done
 
-	gettext "Missing dependendcies:"; echo " $(colorize "$deps" 34)"
+	gettext "Missing dependencies:"; echo " $(colorize "$deps" 34)"
 
 	# Return true if missing deps
 	[ "$deps" != "0" ]

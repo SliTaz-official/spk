@@ -113,7 +113,7 @@ remove() {
 	sed -i "/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg/"d $installed.$SUM
 	status
 
-	separator && newline
+	separator
 
 	# Do we have packages depending on $pkg to remove ?
 	if [ "$altered" ]; then
@@ -129,6 +129,8 @@ remove() {
 				spk-rm $i --root=$root
 			fi
 		done
+	else
+		newline
 	fi
 }
 
