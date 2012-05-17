@@ -65,7 +65,7 @@ count_mirrored() {
 
 is_package_mirrored() {
 	local name=$1
-	local occurance=$(cat $pkgsdesc | grep "$name ")
+	local occurance=$(fgrep "$name |" $pkgsdesc)
 	[ -n "$occurance" ]
 }
 
@@ -80,23 +80,17 @@ download() {
 			wget -c ${mirror%/}/$package ;;
 	esac
 	if [ ! -f "$package" ]; then
-		echo "ERROR: Missing package $package"
-		exit 1
+		gettext "ERROR: Missing package $package"; newline
+		newline && exit 1
 	fi
 }
 
 # Assume package name is valid
-# There may be a more efficient way to do this...
 full_package() {
-	local name=$1
-	local occurance=$(cat $pkgsdesc | grep "$name ")
-	local count=0
-	for i in $(echo $occurance | tr "|" "\n"); do
-		if [ $count -eq 1 ]; then
-			echo $name-$i && return
-		fi
-		count=$(($count+1))
-	done
+	IFS="|"
+	local line="$(grep "^$1 |" $pkgsdesc)"
+	echo $line | busybox awk '{print $1 "-" $2}'
+	unset IFS
 }
 
 # Check if a package is already installed.
