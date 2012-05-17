@@ -12,12 +12,14 @@
 
 # Internal variables.
 mirrorurl="${root}${PKGS_DB}/mirror"
+mirrors="${root}${PKGS_DB}/mirrors"
 installed="${root}${PKGS_DB}/installed"
 pkgsdesc="${root}${PKGS_DB}/packages.desc"
 pkgsmd5="${root}${PKGS_DB}/packages.$SUM"
 blocked="${root}${PKGS_DB}/blocked.list"
 activity="${root}${PKGS_DB}/activity"
 logdir="${root}/var/log/spk"
+extradb="${root}${PKGS_DB}/extra"
 
 #
 # Sanity checks

@@ -50,7 +50,7 @@ case "$1" in
 	info)
 		cache="$(du -sh $CACHE_DIR | awk '{print $1 " " $2}')"
 		newline
-		boldify "Spk Info"
+		boldify "Spk info"
 		separator
 		gettext "Database   :"; echo " $installed"
 		gettext "Cache info :"; echo " $cache"
@@ -74,7 +74,7 @@ esac
 # Handle packages: spk package1 ... packageN
 #
 
-debug "cmdline: $0 $@"
+debug "cmdline: $@"
 count=0
 
 for pkg in $@
