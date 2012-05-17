@@ -46,6 +46,7 @@ EOT
 extract_receipt() {
 	local dir="$1"
 	local file="$2"
+	debug "extract_receipt $1 $2"
 	cd "$dir"
 	{ cpio --quiet -i receipt > /dev/null 2>&1; } < $file
 	cd - >/dev/null
@@ -99,6 +100,7 @@ check_installed() {
 	local name="$1"
 	if [ -d "$installed/$name" ]; then
 		echo $(boldify "$name") $(gettext "package is already installed")
+		[ "$forced" ] || rm -rf $tmpdir
 		continue
 	fi
 }

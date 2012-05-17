@@ -11,6 +11,9 @@
 
 tmpdir="/tmp/spk/$RANDOM"
 
+# TODO: Handle packages.equiv: php dep on lighttpd, but id apache is installed
+# we dont need lighttpd since apache is equivalent.
+
 #
 # Functions
 #
@@ -64,17 +67,11 @@ update_databases() {
 install_package() {
 	local package_file=$1
 
-	# Never used I think!!!
 	# Set by receipt: pre_depends() DEPENDS SELF_INSTALL CONFIG_FILES post_install()
-
-	# Create package path early to avoid dependencies loop
-	mkdir -p $tmpdir
-	extract_receipt $tmpdir $package_file
-	source $tmpdir/receipt
 
 	local package_name=$PACKAGE
 	local package_dir="$installed/$package_name"
-	mkdir -p $package_dir
+	mkdir -p $package_dir || exit 1
 
 	# Run pre_depends from receipt if it exists
 	if grep -q ^pre_depends $tmpdir/receipt; then
@@ -147,26 +144,29 @@ install_package() {
 	debug "check modified files"
 	for file in $file_list
 	do
-		local filegrep=$(grep ^${file}$ $installed/*/files.list)
+		local filegrep=$(egrep ^${file}$ $installed/*/files.list)
 		if [ "$filegrep" ]; then
 			local list=$(echo $filegrep | cut -d ":" -f 1)
+			local count=0
 			for pkg_file in $list; do
 				local name=$(basename $(dirname $pkg_file))
-				[  "$pkg" == "$name" ] && continue 2
-				eval_gettext "Conflict package: \$name"; newline
-				# If confirm is set, ask to remove
-				if ! $confirm || gettext "Remove " && confirm; then
-					spk-rm $name
-				else
-					eval_gettext "Warning! /$file will be overwritten!"; newline
-					eval_gettext "If you remove /$package_name, be sure to reinstall $name"; newline
+				[  "$package_name" == "$name" ] && continue 2
+				count=$(($count +1))
+				[ "$count" == "1" ] && gettext "Modified package:"; \
+					colorize " $name" 31
+				gettext "Overwriting file:"; echo " $file"
+				# If confirm is set, ask to remove. Do we want that ?
+				# If gawk is installed for example we will never remove Busybox
+				# Use CONFLICTS receipt variable to avoid
+				if [ "$confirm" ]; then
+					echo -n "NOTE: confirm: spk-rm $name ???"; read
 				fi
 			done
 		fi
 	done
 
 	cd $tmpdir || exit 1
-	cp receipt files.list $package_dir
+	cp receipt files.list $package_dir || exit 1
 
 	# Copy the description if found.
 	[ -f "description.txt" ] && cp description.txt $package_dir
@@ -256,7 +256,22 @@ install_package() {
 # Parameters: package_file
 install_local() {
 	package_file="$1"
-	check_valid_tazpkg $package_file
+	#check_valid_tazpkg $package_file
+	if [ -f "$package_file" ]; then
+		if [ $(dirname $package_file) == "." ]; then
+			package_file=$(pwd)/$package_file
+		fi
+		debug "package file: $package_file"
+	else
+		gettext "Unable to find:"; echo " $package_file"
+		exit 1
+	fi
+
+	# Get package name now to check if installed
+	mkdir -p $tmpdir
+	extract_receipt $tmpdir $package_file
+	source $tmpdir/receipt
+	[ "$forced" ] || check_installed $PACKAGE
 	install_package $package_file
 	update_databases
 }
@@ -298,6 +313,11 @@ install_web() {
 	else
 		newline && download "$package_full.tazpkg"
 	fi
+
+	# Create package path early to avoid dependencies loop
+	mkdir -p $tmpdir
+	extract_receipt $tmpdir "$CACHE_DIR/$package_full.tazpkg"
+	source $tmpdir/receipt
 
 	install_package "$CACHE_DIR/$package_full.tazpkg"
 
@@ -344,10 +364,11 @@ for pkg in $@
 do
 	case "$pkg" in
 		*.tazpkg|*.spk)
-			[ "$forced" ] || check_installed $(package_name $package_file)
-			echo "Local package"
-			#install_local $pkg
-			;;
+			#[ "$forced" ] || check_installed $(package_name $pkg)
+			install_local $pkg ;;
+		*.deb|.rmp)
+			echo "TODO: spk-convert then install" ;;
+		*.*) gettext "WARNING: Not a valid package:"; echo " $pkg" ;;
 		--*) continue ;;
 		*)
 			[ "$forced" ] || check_installed $pkg
