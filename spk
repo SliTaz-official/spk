@@ -60,12 +60,12 @@ case "$1" in
 		separator
 		newline && exit 0 ;;
 	activity)
-		# --head=NB
-		: ${head=18}
+		# --lines=NB
+		: ${lines=18}
 		newline
 		boldify "Spk Activity"
 		separator
-		cat $activity | head -n $head
+		cat $activity | tail -n $lines
 		separator && newline
 		exit 0 ;;
 esac
@@ -112,6 +112,27 @@ do
 				spk-rm $pkg --count=$count
 				count=$(($count + 1))
 				continue ;;
+			*\ --log\ *)
+				# Display packges log's
+				if [ -f "$logdir/$pkg/install.log" ]; then
+					count=$(($count + 1))
+					[ "$count" == "1" ] && newline
+					colorize "$(gettext "Install log for:"; echo " $pkg")" 36
+					separator
+					cat $logdir/$pkg/install.log
+				else
+					gettext "Any install log for:"; boldify " $pkg"
+				fi
+				if [ -f "$logdir/$pkg/up.log" ]; then
+					colorize "$(gettext "Upgrade log for:"; echo " $pkg")" 36
+					separator
+					cat $logdir/$pkg/up.log
+				else
+					gettext "Any upgrade log for:"; boldify " $pkg"
+					newline
+				fi
+
+				continue ;;
 		esac
 		count=$(($count + 1))
 		[ "$count" == 1 ] && newline
@@ -130,7 +151,9 @@ do
 		# Handle: --options
 		case " $@ " in
 			*\ --add\ *)
-				spk-add $pkg && continue ;;
+				spk-add $pkg --count=$count
+				count=$(($count + 1))
+				continue ;;
 		esac
 		count=$(($count + 1))
 		[ "$count" == 1 ] && newline
