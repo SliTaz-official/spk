@@ -166,4 +166,10 @@ do
 	remove
 	log "Removed package: $pkg"
 done
+
+# Show all new counted packages in verbose mode
+if [ "$verbose" ]; then
+	gettext "Removed packages:"; colorize " $count" 34
+fi
+
 exit 0

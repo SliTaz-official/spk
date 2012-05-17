@@ -7,12 +7,8 @@
 # Author: See AUTHORS files
 #
 . /usr/lib/slitaz/libspk.sh
-#. lib/libspk.sh
 
 tmpdir="/tmp/spk/$RANDOM"
-
-# TODO: Handle packages.equiv: php dep on lighttpd, but id apache is installed
-# we dont need lighttpd since apache is equivalent.
 
 #
 # Functions
@@ -248,7 +244,8 @@ install_package() {
 		updatedepmod=yes
 	fi
 	separator
-	eval_gettext "\$package_name (\$VERSION\$EXTRAVERSION) is installed."; newline
+	echo -n "$package_name ({$VERSION}${EXTRAVERSION})"
+	gettext "is installed."; newline
 	newline
 }
 
@@ -272,6 +269,7 @@ install_local() {
 	extract_receipt $tmpdir $package_file
 	source $tmpdir/receipt
 	[ "$forced" ] || check_installed $PACKAGE
+	[ "$count" == "1" ] && newline
 	install_package $package_file
 	update_databases
 }
@@ -364,7 +362,7 @@ for pkg in $@
 do
 	case "$pkg" in
 		*.tazpkg|*.spk)
-			#[ "$forced" ] || check_installed $(package_name $pkg)
+			count=$(($count + 1))
 			install_local $pkg ;;
 		*.deb|.rmp)
 			echo "TODO: spk-convert then install" ;;
@@ -376,4 +374,10 @@ do
 			install_web $pkg ;;
 	esac
 done
+
+# Show all new counted packages in verbose mode
+if [ "$verbose" ]; then
+	gettext "New installed packages:"; colorize " $count" 34
+fi
+
 exit 0

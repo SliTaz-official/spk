@@ -15,7 +15,6 @@ mirrorurl="${root}${PKGS_DB}/mirror"
 installed="${root}${PKGS_DB}/installed"
 pkgsdesc="${root}${PKGS_DB}/packages.desc"
 pkgsmd5="${root}${PKGS_DB}/packages.$SUM"
-# ????do we need packages.equiv????
 blocked="${root}${PKGS_DB}/blocked.list"
 activity="${root}${PKGS_DB}/activity"
 
@@ -148,7 +147,8 @@ missing_deps() {
 			gettext "Missing:"; echo " $pkg"
 			deps=$(($deps+1))
 		elif [ ! -f "$installed/$pkg/receipt" ]; then
-			gettext "WARNING: Dependency loop between \$package and \$pkg."; newline
+			gettext "WARNING: Dependency loop between:"; newline
+			echo "  $package --> $pkg"
 		fi
 	done
 
