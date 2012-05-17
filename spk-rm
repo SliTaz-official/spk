@@ -110,7 +110,7 @@ remove() {
 	# Remove package receipt.
 	gettext "Removing package receipt..."
 	rm -rf $installed/$PACKAGE
-	sed -i "/ $PACKAGE-${VERSION}${EXTRAVERSION}$/d" $pkgsmd5
+	sed -i "/$PACKAGE-${VERSION}${EXTRAVERSION}.tazpkg/"d $installed.$SUM
 	status
 
 	separator && newline

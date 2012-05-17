@@ -153,7 +153,6 @@ install_package() {
 		fi
 	done
 
-
 	cd $tmpdir || exit 1
 	cp receipt files.list $package_dir
 
@@ -339,7 +338,7 @@ esac
 # Handle packages: package package.tazpkg ... packageN packageN.tazpkg
 #
 
-count=0
+: ${count=0}
 check_root
 
 for pkg in $@
