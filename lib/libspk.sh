@@ -16,10 +16,12 @@ mirrors="${root}${PKGS_DB}/mirrors"
 installed="${root}${PKGS_DB}/installed"
 pkgsdesc="${root}${PKGS_DB}/packages.desc"
 pkgsmd5="${root}${PKGS_DB}/packages.$SUM"
+pkgsequiv="${root}${PKGS_DB}/packages.equiv"
 blocked="${root}${PKGS_DB}/blocked.list"
 activity="${root}${PKGS_DB}/activity"
 logdir="${root}/var/log/spk"
 extradb="${root}${PKGS_DB}/extra"
+tmpdir="/tmp/spk/$RANDOM"
 
 #
 # Sanity checks
@@ -48,22 +50,31 @@ EOT
 extract_receipt() {
 	local dir="$1"
 	local file="$2"
-	debug "extract_receipt $1 $2"
 	cd "$dir"
 	{ cpio --quiet -i receipt > /dev/null 2>&1; } < $file
+	cd - >/dev/null
+}
+
+# Extract files.list from tazpkg
+# Parameters: result_dir package_file
+extract_fileslist() {
+	local dir="$1"
+	local file="$2"
+	cd "$dir"
+	{ cpio --quiet -i files.list > /dev/null 2>&1; } < $file
 	cd - >/dev/null
 }
 
 # Used by: list
 count_installed() {
 	local count=$(ls $installed | wc -l)
-	gettext "Installed  :"; echo " $count"
+	gettext "Installed     :"; echo " $count"
 }
 
 # Used by: list
 count_mirrored() {
 	local count=$(cat $pkgsmd5 | wc -l)
-	gettext "Mirrored   :"; echo " $count"
+	gettext "Mirrored      :"; echo " $count"
 }
 
 is_package_mirrored() {
@@ -109,8 +120,8 @@ check_installed() {
 
 # get an already installed package from packages.equiv  TODO REDO!
 equivalent_pkg() {
-	for i in $(grep -hs "^$1=" ${root}${PKGS_DB}/packages.equiv \
-		   ${root}${PKGS_DB}/undigest/*/packages.equiv | sed "s/^$1=//")
+	for i in $(grep -hs "^$1=" $pkgsequiv \
+		$extradb/*/packages.equiv | sed "s/^$1=//")
 	do
 		if echo $i | fgrep -q : ; then
 			# format 'alternative:newname'

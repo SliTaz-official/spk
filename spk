@@ -49,12 +49,15 @@ case "$1" in
 	""|*usage|*help) usage ;;
 	info)
 		cache="$(du -sh $CACHE_DIR | awk '{print $1 " " $2}')"
+		extra=$(ls $extradb | wc -l)
 		newline
 		boldify "Spk info"
 		separator
-		gettext "Database   :"; echo " $installed"
-		gettext "Cache info :"; echo " $cache"
-		gettext "Mirror URL :"; echo " $(cat $mirrorurl)"
+		gettext "Architecture  :"; echo " $SLITAZ_ARCH"
+		gettext "Database      :"; echo " $installed"
+		gettext "Cache info    :"; echo " $cache"
+		gettext "Mirror URL    :"; echo " $(cat $mirrorurl)"
+		gettext "Extra mirrors :"; echo " $extra"
 		count_installed
 		count_mirrored
 		separator

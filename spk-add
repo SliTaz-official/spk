@@ -8,8 +8,6 @@
 #
 . /usr/lib/slitaz/libspk.sh
 
-tmpdir="/tmp/spk/$RANDOM"
-
 #
 # Functions
 #
