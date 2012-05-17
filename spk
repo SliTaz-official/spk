@@ -130,8 +130,7 @@ do
 		# Handle: --options
 		case " $@ " in
 			*\ --add\ *)
-				echo "TODO: test 'spk-add $pkg'"
-				continue ;;
+				spk-add $pkg && continue ;;
 		esac
 		count=$(($count + 1))
 		[ "$count" == 1 ] && newline

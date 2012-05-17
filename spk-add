@@ -122,11 +122,11 @@ install_package() {
 	if [ -f $package_dir/files.list ]; then
 		for file in $(cat $package_dir/files.list)
 		do
-			egrep -q "^$(echo $file | grepesc)$" $tmpdir/files.list && continue
+			grep -q "^$(echo $file | grepesc)$" $tmpdir/files.list && continue
 			local modifiers=$(cat $package_dir/modifiers 2> /dev/null; \
 				fgrep -sl $package_dir */modifiers | cut -d/ -f1)
 			for i in modifiers; do
-				egrep -qs "^$(echo $file | grepesc)$" $i/files.list && continue 2
+				grep -qs "^$(echo $file | grepesc)$" $i/files.list && continue 2
 			done
 			files_to_remove="$files_to_remove $file"
 		done
@@ -147,7 +147,7 @@ install_package() {
 	debug "check modified files"
 	for file in $file_list
 	do
-		local filegrep=$(egrep ^${file}$ $installed/*/files.list)
+		local filegrep=$(grep ^${file}$ $installed/*/files.list)
 		if [ "$filegrep" ]; then
 			local list=$(echo $filegrep | cut -d ":" -f 1)
 			for pkg_file in $list; do
