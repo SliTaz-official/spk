@@ -99,33 +99,61 @@ count_mirrored() {
 # Check if package is on main or extra mirror.
 mirrored_pkg() {
 	local name=$1
-	local find=$(grep "^$name |" $pkgsdesc $extradb/*/*.desc 2>/dev/null)
-	[ -n "$find" ]
+	#local find=$(grep "^$name |" $pkgsdesc $extradb/*/*.desc 2>/dev/null)
+	for desc in $(find $extradb $pkgsdesc -name packages.desc); do
+		if grep -q "^$name |" $desc; then
+			db=$(dirname $desc)
+			mirrored=$(grep "^$name |" $desc)
+			mirror=$(cat $db/mirror)
+			break
+		fi
+	done
 }
 
 # Download a file trying all mirrors
-# Parameters: package/file
+# Usage: file [url|path]
 #
-# We should do much better here, give priority to extra, then try
-# main mirror, then try others official mirrors. The case $file is
-# not needed since we use same URL for list or packages.
+# Priority to extra is done by mirrored_pkg wich try first to find the
+# packages in extra mirror, then on official.
 #
 download() {
 	local file=$1
-	local mirror="$(cat $mirrorurl)"
+	local uri="${2%/}"
+	local pwd=$(pwd)
 	[ "$quiet" ] && local quiet="-q"
-	case "$file" in
-		*.tazpkg)
-			[ "$quiet" ] || echo "URL: ${mirror%/}/"
-			gettext "Downloading:"; boldify " $file"
-			wget $quiet -c ${mirror%/}/$file
-			if [ ! -f "$file" ]; then
-				gettext "ERROR: Missing package:"; boldify "$package"
-				newline && exit 1
-			fi ;;
-		ID|packages.*|files.list.lzma)
-			echo "TODO" ;;
-	esac
+	[ "$cache" ] && local pwd=$CACHE_DIR
+	[ "$forced" ] && rm -f $pwd/$file
+	debug "download file: $file"
+	debug "DB: $db"
+	# Local mirror ? End by cd to cache, we may be installind. If --get
+	# was used we dl/copy in the current dir.
+	if [ -f "$uri/$file" ]; then
+		[ "$quiet" ] || echo "URI: $uri/"
+		[ "$get" ] || pwd=$CACHE_DIR
+		gettext "Local mirror:"; boldify " $file"
+		gettext "Copying file to:"; colorize " $pwd" 34
+		cp -f $uri/$file $pwd
+		cd $pwd && return 0
+	fi
+	# In cache ? Root can use --cache to set destdir.
+	cd $CACHE_DIR
+	if [ -f "$CACHE_DIR/$file" ]; then
+		gettext "Using cache:"; colorize " ${file%.tazpkg}" 34
+		return 0
+	else
+		[ "$quiet" ] || echo "URL: $uri/"
+		gettext "Downloading:"; boldify " $file"
+		gettext "Destination:"; colorize " $pwd" 34
+		if [ -f "$pwd/$file" ]; then
+			echo "File exist: $pwd/$file" && return 0
+		fi
+		wget $quiet -c $uri/$file -O $CACHE_DIR/$file
+	fi
+	# Be sure the file was fetched.
+	if [ ! -f "$pwd/$file" ] || [ ! -f "$CACHE_DIR/$file" ]; then
+		gettext "ERROR: Missing file:"; colorize "$file" 31
+		newline && exit 1
+	fi
 }
 
 # Return the full package name, search in all packages.desc and break when
@@ -133,7 +161,6 @@ download() {
 full_package() {
 	for desc in $(find $extradb $pkgsdesc -name packages.desc); do
 		local line="$(grep "^$1 |" $desc)"
-		local db=$(dirname $desc)
 		if grep -q "^$1 |" $desc; then
 			IFS="|"
 			echo $line | busybox awk '{print $1 "-" $2 ".tazpkg"}'

@@ -6,7 +6,8 @@
 # Copyright (C) SliTaz GNU/Linux - BSD License
 # Author: See AUTHORS files
 #
-. /usr/lib/slitaz/libspk.sh
+#. /usr/lib/slitaz/libspk.sh
+. lib/libspk.sh
 
 #
 # Functions
@@ -24,13 +25,17 @@ $(gettext "SliTaz Packages toolset")
 $(boldify $(gettext "Commands:"))
   info        $(gettext "Display path, mirror and other stats")
   activity    $(gettext "Display packages activities")
+  clean       $(gettext "Clean cache and temporary files")
 
 $(boldify $(gettext "Options:"))
   --add       $(gettext "Install packages if mirrored")
   --rm        $(gettext "Remove installed packages")
+  --get       $(gettext "Download packages specified on cmdline")
   --block     $(gettext "Add packages to the blocked list")
   --unblock   $(gettext "Remove packages from the blocked list")
   --log       $(gettext "Show package install and upgrade log")
+  --cache     $(gettext "Used with --get to download in cache")
+  --forced    $(gettext "Force packages reinstall or download")
   --root=     $(gettext "Set the root file system path")
   --debug     $(gettext "Display some usefull debug information")
 
@@ -72,17 +77,41 @@ case "$1" in
 		cat $activity | tail -n $lines
 		separator && newline
 		exit 0 ;;
+	clean)
+		newline
+		boldify "Spk Clean"
+		separator
+		size=$(du -sh $CACHE_DIR | awk '{print $1}')
+		gettext "Cleaning cache:"; echo -n " $CACHE_DIR ($size)"
+		rm -rf $CACHE_DIR/* && status
+		gettext "Cleaning tmp  :"; echo -n " $(dirname $tmpdir)"
+		rm -rf $(dirname $tmpdir) && status
+		separator && newline
+		exit 0 ;;
 esac
 
 #
 # Handle packages: spk package1 ... packageN
 #
 
-debug "cmdline: $@"
+#debug "cmdline: $@"
 count=0
 
 for pkg in $@
 do
+	# Handle general: --options
+	case " $@ " in
+		*\ --get\ *)
+			# We want: package-version.tazpkg
+			package_full=$(full_package $pkg)
+			mirrored_pkg $pkg
+			[ "$mirrored" ] || continue
+			[ "$count" == 0 ] && newline
+			count=$(($count + 1))
+			download $package_full $mirror
+			unset mirrored mirror db
+			newline && continue ;;
+	esac
 	# Installed ?
 	if [ -d "$installed/$pkg" ]; then
 		# Handle: --options
@@ -130,7 +159,7 @@ do
 					separator
 					cat $logdir/$pkg/up.log
 				else
-					gettext "Any upgrade log for:"; boldify " $pkg"
+					colorize "$(gettext "Any upgrade log for:"; echo " $pkg")" 36
 					newline
 				fi && continue ;;
 		esac
@@ -146,9 +175,9 @@ do
 		continue
 	fi
 	# Mirrored ?
-	mirrored=$(grep "^$pkg |" $pkgsdesc)
+	mirrored_pkg $pkg
 	if [ "$mirrored" ]; then
-		# Handle: --options
+		# Handle mirrored: --options
 		case " $@ " in
 			*\ --add\ *)
 				spk-add $pkg --count=$count
@@ -167,6 +196,7 @@ do
 		separator && newline
 		continue
 	fi
+	unset mirrored
 	# Skip options such as --confirm or unknow package
 	case "$pkg" in
 		--*) continue ;;

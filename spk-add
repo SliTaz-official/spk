@@ -288,10 +288,10 @@ install_web() {
 	local package_name="$1"
 
 	# Check if get-Package
-	if mirrored_pkg get-$package_name; then
-		package_name="get-$package_name"
-		exec=true
-	fi
+	#if mirrored_pkg get-$package_name; then
+		#package_name="get-$package_name"
+		#exec=true
+	#fi
 
 	# Check if package is mirrored
 	if ! mirrored_pkg $package_name; then
@@ -302,25 +302,29 @@ install_web() {
 	# We want: package-version.tazpkg
 	local package_full=$(full_package $package_name)
 
-	cd $CACHE_DIR || exit 1
-	if [ -f "$package_full" ]; then
-		[ "$count" == 1 ] && newline
-		gettext "Using cache:"; colorize " ${package_full%.tazpkg}" 34
+	#mirrored_pkg $package_name
+	debug "spk-add package: $package_name"
+	download "$package_full" $mirror
 
-		# Check package download was finished
-		if ! tail -c 2k $package_full | fgrep -q 00000000TRAILER; then
-			gettext "Continuing download of:"; echo " $package_name"
-			download "$package_full"
-		fi
+	#cd $CACHE_DIR || exit 1
+	#if [ -f "$package_full" ]; then
+		#[ "$count" == 1 ] && newline
+		#gettext "Using cache:"; colorize " ${package_full%.tazpkg}" 34
 
-		# Check that the package has the correct checksum
-		#if [ "$($CHECKSUM $package_full)" != "$(fgrep \"  $package_full\" $pkgsmd5)" ]; then
-		#	rm -f $package.tazpkg
-		#	download "$package_full"
+		## Check package download was finished
+		#if ! tail -c 2k $package_full | fgrep -q 00000000TRAILER; then
+			#gettext "Continuing download of:"; echo " $package_name"
+			#download "$package_full"
 		#fi
-	else
-		newline && download "$package_full"
-	fi
+
+		## Check that the package has the correct checksum
+		##if [ "$($CHECKSUM $package_full)" != "$(fgrep \"  $package_full\" $pkgsmd5)" ]; then
+		##	rm -f $package.tazpkg
+		##	download "$package_full"
+		##fi
+	#else
+		#newline && download "$package_full" $mirror
+	#fi
 
 	# Create package path early to avoid dependencies loop
 	mkdir -p $tmpdir
