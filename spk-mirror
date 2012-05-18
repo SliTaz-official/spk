@@ -60,17 +60,27 @@ extra_db() {
 	debug "extra DB: $db"
 }
 
-# Add a package to lists
+# Display info about an extra repo
+extra_info() {
+	local db=$1
+	debug "extra DB: $extradb/$db"
+	nb=$(cat $extradb/$db/packages.$SUM 2>/dev/null | wc -l)
+	echo -n "Extra DB  :"; boldify " $db"
+	echo -n "Extra URL :"; echo " $(cat $extradb/$db/mirror)"
+	gettext "Packages  :"; colorize " $nb" 32
+}
+
+# Add a package to packages.* lists
 addto_list() {
 	cd $pkgsdir
 	echo "$PACKAGE-${VERSION}${EXTRAVERSION}" >> packages.list
 	$CHECKSUM $(basename $pkg) >> packages.$SUM
 	#
-	# Add PACKED_SIZE UNPACKED_SIZE to be used to know packages size
+	# Add PACKED_SIZE UNPACKED_SIZE to know packages size
 	# before installing ??? --> actually done via packages.txt
 	#
 	cat >> packages.desc << EOT
-$PACKAGE | ${VERSION}${EXTRAVERSION} | $SHORT_DESC | $CATEGORY | $WEBSITE"
+$PACKAGE | ${VERSION}$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
 EOT
 	# packages.equiv is used by tazpkg install to check depends.
 	touch packages.equiv
@@ -178,15 +188,17 @@ do
 			extra_db
 			if [ -d "$extradb/$db" ]; then
 				gettext "Extra mirror already exist"; newline
-				echo -n "DB:"; boldify " $db"
+				extra_info $db
 			else
-				gettext "Enabling: extra mirror"; newline
+				boldify $(gettext "Enabling: extra mirror")
+				separator
 				echo "URL: $(boldify "$url")"
 				if ! check_mirror $url; then
 					continue
 				fi
 				mkdir -p $extradb/$db
 				echo "$url" > $extradb/$db/mirror
+				separator
 				gettext "New extra mirror is ready to use"; newline
 			fi
 			newline ;;
@@ -206,7 +218,7 @@ do
 			cd $pkgsdir
 			if [ ! "$nodb" ]; then
 				time=$(date +%s)
-				rm -f packages.* ID
+				rm -f packages.* ID *.lzma
 				newline
 				boldify $(gettext "Creating packages lists")
 				separator
@@ -261,6 +273,11 @@ do
 		*)
 			[ "$count" == 0 ] && newline
 			count=$(($count + 1))
+			# Should we handle --rm also here ?
+			if [ -d "$extradb/$url" ]; then
+				extra_info $(basename $extradb/$url)
+				newline && continue
+			fi
 			gettext "Can't handle:"
 			colorize " $url" 31 && newline ;;
 	esac

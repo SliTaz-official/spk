@@ -22,13 +22,15 @@ $(boldify $(gettext "Usage:")) $name [packages|--options]
 $(gettext "List packages or installed files by packages")
 
 $(boldify $(gettext "Options:"))
-  --count     $(gettext "Display the number of installed packages")
-  --mirror    $(gettext "List all the packages on mirror")
-  --blocked   $(gettext "List all blocked packages")
-  --short     $(gettext "Short list of installed packages")
-  --root=     $(gettext "Set the root file system path")
-  --color=NB  $(gettext "Set package name color in list")
-  --debug     $(gettext "Display some usefull debug information")
+  --count      $(gettext "Display the number of installed packages")
+  --mirror     $(gettext "List all the packages on mirror")
+  --extra      $(gettext "List packages on extra mirrors ")
+  --blocked    $(gettext "List all blocked packages")
+  --short      $(gettext "Short packages list format")
+  --modifiers  $(gettext "List package modifiers")
+  --root=      $(gettext "Set the root file system path")
+  --color=NB   $(gettext "Set package name color in list")
+  --debug      $(gettext "Display some usefull debug information")
 
 $(boldify $(gettext "Examples:"))
   $name package1 package2 packageN
@@ -51,19 +53,33 @@ do
 			count_mirrored
 			exit 0 ;;
 		--mirror)
-			IFS="|"
-			cat $pkgsdesc | while read package version desc category
-			do
-				newline
-				gettext "Package    :"; colorize " $package" 32
-				gettext "Version    :"; echo "$version"
-				gettext "Short desc :"; echo "$desc"
-			done && unset IFS
+			newline
+			boldify "$(gettext "Mirror") $(cat $mirrorurl)"
+			read_pkgsdesc $pkgsdesc
 			separator
 			boldify $(count_mirrored)
-			echo "" && exit 0 ;;
+			newline && exit 0 ;;
+		--extra)
+				[ -d "$extradb" ] || exit 1
+				for extra in $extradb/*
+				do
+					newline
+					boldify "$(gettext "Extra mirror")"
+					if [ ! -f "$extra/packages.desc" ]; then
+						echo "URL: $(cat $extra/mirror)"
+						gettext "Missing:"; colorize " packages.desc" 31
+						continue
+					fi
+					separator
+					read_pkgsdesc $extra/packages.desc
+					separator
+					boldify $(echo -n "$(cat $extra/packages.$SUM | wc -l) "
+					gettext "packages in:"; echo " $(basename $extra)")
+					newline
+				done
+				exit 0 ;;
 		--blocked)
-			if [ -f "$blocked" ]; then
+			if [ -s "$blocked" ]; then
 				cat $blocked
 			else
 				gettext "No blocked packages"; echo ""
@@ -87,15 +103,29 @@ do
 			for pkg in $@
 			do
 				[ -f "$installed/$pkg/files.list" ] || continue
+				nb=$(cat $installed/$pkg/files.list | wc -l)
 				count=$(($count + 1))
 				[ "$count" == 1 ] && newline
+				# List modifiers
+				if [ "$modifiers" ]; then
+					modifiers=$installed/$pkg/modifiers
+					if [ -f "$modifiers" ]; then
+						boldify "$(gettext "Modifiers for") $pkg"
+						separator
+						cat $modifiers
+						separator && newline
+					else
+						echo -n "$(boldify "$pkg") "
+						gettext "package was not modified"; newline
+					fi
+					continue
+				fi
 				boldify $(gettext "Installed files by"; echo " $pkg")
 				separator
 				cat $installed/$pkg/files.list
-				files=$(wc -l $installed/$pkg/files.list | cut -d " " -f 1)
 				separator
-				gettext "Installed files by"; echo " $pkg : $files"
-				newline
+				gettext "Installed files by"; echo -n " $pkg: "
+				colorize "$nb" 32 && newline
 			done && exit 0 ;;
 	esac
 done

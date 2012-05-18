@@ -45,6 +45,24 @@ $(gettext "Category   :") $CATEGORY
 EOT
 }
 
+# Display package info from a packages.desc list
+# Usage: read_pkgsdesc /path/to/packages.desc
+read_pkgsdesc() {
+	local list="$1"
+	IFS="|"
+	cat $list | while read package version desc category
+	do
+		if [ "$short" ]; then
+			echo -n "$(colorize "$package" 32)"; indent 28 " $version"
+		else
+			newline
+			gettext "Package    :"; colorize " $package" 32
+			gettext "Version    :"; echo "$version"
+			gettext "Short desc :"; echo "$desc"
+		fi
+	done && unset IFS
+}
+
 # Extract receipt from tazpkg
 # Parameters: result_dir package_file
 extract_receipt() {
@@ -73,13 +91,14 @@ count_installed() {
 
 # Used by: list
 count_mirrored() {
+	[ -f "$pkgsmd5" ] || return
 	local count=$(cat $pkgsmd5 | wc -l)
 	gettext "Mirrored      :"; echo " $count"
 }
 
 is_package_mirrored() {
 	local name=$1
-	local occurance=$(fgrep "$name |" $pkgsdesc)
+	local occurance=$(grep "^$name |" $pkgsdesc)
 	[ -n "$occurance" ]
 }
 
