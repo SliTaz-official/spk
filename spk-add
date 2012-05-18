@@ -285,15 +285,15 @@ install_web() {
 	local package_name="$1"
 
 	# Check if get-Package
-	if ! is_package_mirrored $package_name; then
+	if mirrored_pkg get-$package_name; then
 		package_name="get-$package_name"
-		AUTOEXEC=true
+		exec=true
 	fi
 
 	# Check if package is mirrored
-	if ! is_package_mirrored $package_name; then
-		gettext "Could not find package on mirror:"; echo " $package_name"
-		exit 1
+	if ! mirrored_pkg $package_name; then
+		gettext "Could not find package on mirror:"
+		boldify " $package_name" && exit 1
 	fi
 
 	# package_full=Package-Version
@@ -324,8 +324,8 @@ install_web() {
 
 	install_package "$CACHE_DIR/$package_full.tazpkg"
 
-	#[ "$AUTOEXEC" ] && chroot $root/ $package_name
-	[ "$AUTOEXEC" ] && $package_name $root
+	#[ "$exec" ] && chroot $root/ $package_name
+	[ "$exec" ] && $package_name $root
 	update_databases
 }
 

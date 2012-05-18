@@ -96,7 +96,8 @@ count_mirrored() {
 	gettext "Mirrored      :"; echo " $count"
 }
 
-is_package_mirrored() {
+# Check if package is on main or extra mirror.
+mirrored_pkg() {
 	local name=$1
 	local occurance=$(grep "^$name |" $pkgsdesc)
 	[ -n "$occurance" ]
