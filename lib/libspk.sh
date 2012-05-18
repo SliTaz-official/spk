@@ -99,8 +99,8 @@ count_mirrored() {
 # Check if package is on main or extra mirror.
 mirrored_pkg() {
 	local name=$1
-	local occurance=$(grep "^$name |" $pkgsdesc)
-	[ -n "$occurance" ]
+	local find=$(grep "^$name |" $pkgsdesc $extradb/*/*.desc 2>/dev/null)
+	[ -n "$find" ]
 }
 
 # Download a file trying all mirrors
@@ -128,12 +128,18 @@ download() {
 	esac
 }
 
-# Assume package name is valid
+# Return the full package name, search in all packages.desc and break when
+# first occurance is found: Usage: full_package pkgname
 full_package() {
-	IFS="|"
-	local line="$(grep "^$1 |" $pkgsdesc)"
-	echo $line | busybox awk '{print $1 "-" $2}'
-	unset IFS
+	for desc in $(find $extradb $pkgsdesc -name packages.desc); do
+		local line="$(grep "^$1 |" $desc)"
+		local db=$(dirname $desc)
+		if grep -q "^$1 |" $desc; then
+			IFS="|"
+			echo $line | busybox awk '{print $1 "-" $2 ".tazpkg"}'
+			unset IFS && break
+		fi
+	done
 }
 
 # Check if a package is already installed.
@@ -149,8 +155,7 @@ check_installed() {
 
 # get an already installed package from packages.equiv  TODO REDO!
 equivalent_pkg() {
-	for i in $(grep -hs "^$1=" $pkgsequiv \
-		$extradb/*/packages.equiv | sed "s/^$1=//")
+	for i in $(grep -hs "^$1=" $pkgsequiv $extradb/*/*.equiv | sed "s/^$1=//")
 	do
 		if echo $i | fgrep -q : ; then
 			# format 'alternative:newname'
@@ -209,3 +214,8 @@ grepesc() {
 is_elf() {
 	[ "$(dd if=$1 bs=1 skip=1 count=3 2> /dev/null)" = "ELF" ]
 }
+
+# Exec functions directly for developement purpose.
+case $1 in
+	*_*) func=$1 && shift && $func $@ ;;
+esac

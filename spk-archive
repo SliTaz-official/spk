@@ -33,7 +33,8 @@ extract_package() {
 	local package_file=$1
 	local package_name=$(package_name $package_file)
 	local size=$(du -sh $package_file | awk '{print $1}')
-	gettext "Extracting"; echo -n " $package_name: $size"
+
+	gettext "Extracting archive"; echo -n ": $size"
 	cpio -idm --quiet < ${package_file##*/} && rm -f ${package_file##*/}
 	unlzma -c fs.cpio.lzma | cpio -idm --quiet && rm fs.cpio.lzma
 	status

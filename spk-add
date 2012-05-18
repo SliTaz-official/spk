@@ -97,9 +97,8 @@ install_package() {
 
 	boldify $(gettext "Adding"; echo " $package_name")
 	separator
-	gettext "Copying"; echo -n " $package_name..."
-	cp $package_file $tmpdir
-	status
+	gettext "Copying package..."
+	cp $package_file $tmpdir && status
 
 	# Add package checksum to $installed.$SUM
 	if [ "$verbose" ]; then
@@ -200,14 +199,15 @@ install_package() {
 		cd - >/dev/null
 	fi
 
-	# Merge ROOT_FS with Package FS
-	gettext "Installing in:"; echo -n " $root/"
+	# Merge package FS with $root
+	nb=$(cat files.list | wc -l)
+	gettext "Installing files:"; echo -n " $nb"
 	cp -a fs/* $root/
 	status
 
 	# Remove old config files
 	if [ "$files_to_remove" ]; then
-		gettext "Removing old"; echo -n " $package_name..."
+		gettext "Removing old files..."
 		for file in $files_to_remove; do
 			if [ "$verbose" ]; then
 				gettext "Removing:"; echo " ${root}${file}"
@@ -219,9 +219,12 @@ install_package() {
 	cd - >/dev/null
 
 	# Remove the temporary directory.
-	gettext "Removing all tmp files... "
-	rm -rf $tmpdir
-	status
+	if [ "$verbose" ]; then
+		gettext "Removing all tmp files... "
+		rm -rf $tmpdir && status
+	else
+		rm -rf $tmpdir
+	fi
 
 	# Post install commands.
 	if grep -q ^post_install $package_dir/receipt; then
@@ -296,33 +299,35 @@ install_web() {
 		boldify " $package_name" && exit 1
 	fi
 
-	# package_full=Package-Version
+	# We want: package-version.tazpkg
 	local package_full=$(full_package $package_name)
 
-	cd $CACHE_DIR > /dev/null
-	if [ -f "$package_full.tazpkg" ]; then
+	cd $CACHE_DIR || exit 1
+	if [ -f "$package_full" ]; then
 		[ "$count" == 1 ] && newline
-		gettext "Using cache:"; echo " $(colorize "$package_full" 34)"
+		gettext "Using cache:"; colorize " ${package_full%.tazpkg}" 34
+
 		# Check package download was finished
-		if ! tail -c 2k $package_full.tazpkg | fgrep -q 00000000TRAILER; then
+		if ! tail -c 2k $package_full | fgrep -q 00000000TRAILER; then
 			gettext "Continuing download of:"; echo " $package_name"
-			download "$package_full.tazpkg"
+			download "$package_full"
 		fi
+
 		# Check that the package has the correct checksum
-		#if [ "$($CHECKSUM $package_full.tazpkg)" != "$(fgrep \"  $package_full.tazpkg\" $pkgsmd5)" ]; then
+		#if [ "$($CHECKSUM $package_full)" != "$(fgrep \"  $package_full\" $pkgsmd5)" ]; then
 		#	rm -f $package.tazpkg
-		#	download "$package_full.tazpkg"
+		#	download "$package_full"
 		#fi
 	else
-		newline && download "$package_full.tazpkg"
+		newline && download "$package_full"
 	fi
 
 	# Create package path early to avoid dependencies loop
 	mkdir -p $tmpdir
-	extract_receipt $tmpdir "$CACHE_DIR/$package_full.tazpkg"
+	extract_receipt $tmpdir "$CACHE_DIR/$package_full"
 	source $tmpdir/receipt
 
-	install_package "$CACHE_DIR/$package_full.tazpkg"
+	install_package "$CACHE_DIR/$package_full"
 
 	#[ "$exec" ] && chroot $root/ $package_name
 	[ "$exec" ] && $package_name $root
@@ -339,8 +344,8 @@ install_deps() {
 		local pkg=$(equivalent_pkg $pkgorg)
 		# Check if package is not installed
 		if [ ! -d "$installed/$pkg" ]; then
-			if [ ! -f "$PKGS_DB/packages.list" ]; then
-				#spk-up --recharge-only
+			if [ ! -f "$pkgsdesc" ]; then
+				#spk-up --list
 				tazpkg recharge
 			fi
 			spk-add $pkg
@@ -382,7 +387,7 @@ done
 
 # Show all new counted packages in verbose mode
 if [ "$verbose" ]; then
-	gettext "New installed packages:"; colorize " $count" 34
+	gettext "Handled packages:"; colorize " $count" 34
 fi
 
 exit 0

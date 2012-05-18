@@ -30,6 +30,7 @@ $(boldify $(gettext "Options:"))
   --rm        $(gettext "Remove installed packages")
   --block     $(gettext "Add packages to the blocked list")
   --unblock   $(gettext "Remove packages from the blocked list")
+  --log       $(gettext "Show package install and upgrade log")
   --root=     $(gettext "Set the root file system path")
   --debug     $(gettext "Display some usefull debug information")
 
@@ -96,8 +97,7 @@ do
 					gettext "Blocking package:"; echo -n " $pkg"
 					echo $pkg >> $blocked
 					log "Blocked package: $pkg" && status
-				fi
-				continue ;;
+				fi && continue ;;
 			*\ --unblock\ *)
 				check_root
 				[ -d "$installed/$pkg" ] || continue
@@ -108,8 +108,7 @@ do
 				else
 					echo -n "$(boldify "$pkg") "
 					gettext "is not blocked"; newline
-				fi
-				continue ;;
+				fi && continue ;;
 			*\ --rm\ *)
 				[ -d "$installed/$pkg" ] || continue
 				spk-rm $pkg --count=$count
@@ -133,9 +132,7 @@ do
 				else
 					gettext "Any upgrade log for:"; boldify " $pkg"
 					newline
-				fi
-
-				continue ;;
+				fi && continue ;;
 		esac
 		count=$(($count + 1))
 		[ "$count" == 1 ] && newline
