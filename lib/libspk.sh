@@ -105,18 +105,27 @@ mirrored_pkg() {
 
 # Download a file trying all mirrors
 # Parameters: package/file
+#
+# We should do much better here, give priority to extra, then try
+# main mirror, then try others official mirrors. The case $file is
+# not needed since we use same URL for list or packages.
+#
 download() {
-	local package=$1
+	local file=$1
 	local mirror="$(cat $mirrorurl)"
-	case "$package" in
+	[ "$quiet" ] && local quiet="-q"
+	case "$file" in
 		*.tazpkg)
-			echo "${mirror%/}/$package"
-			wget -c ${mirror%/}/$package ;;
+			[ "$quiet" ] || echo "URL: ${mirror%/}/"
+			gettext "Downloading:"; boldify " $file"
+			wget $quiet -c ${mirror%/}/$file
+			if [ ! -f "$file" ]; then
+				gettext "ERROR: Missing package:"; boldify "$package"
+				newline && exit 1
+			fi ;;
+		ID|packages.*|files.list.lzma)
+			echo "TODO" ;;
 	esac
-	if [ ! -f "$package" ]; then
-		gettext "ERROR: Missing package $package"; newline
-		newline && exit 1
-	fi
 }
 
 # Assume package name is valid
