@@ -110,6 +110,23 @@ mirrored_pkg() {
 	done
 }
 
+# Check if the download was sane
+check_download() {
+	debug "check_download: $file"
+	if ! tail -c 2k $file | fgrep -q 00000000TRAILER; then
+		gettext "Continuing download of:"; echo " $file"
+		download "$file" $mirror
+	fi
+	# Check that the package has the correct checksum
+	local msum=$(fgrep "  $package_full" $pkgsmd5)
+	local sum=$($CHECKSUM $file)
+	debug "mirror $SUM : $msum"
+	debug "local $SUM  : $sum"
+	if [ "$sum" != "$msum" ]; then
+		rm -f $file && download "$file" $mirror
+	fi
+}
+
 # Download a file trying all mirrors
 # Usage: file [url|path]
 #
@@ -122,38 +139,50 @@ download() {
 	local pwd=$(pwd)
 	[ "$quiet" ] && local quiet="-q"
 	[ "$cache" ] && local pwd=$CACHE_DIR
+	[ "$get" ] || local pwd=$CACHE_DIR
 	[ "$forced" ] && rm -f $pwd/$file
 	debug "download file: $file"
 	debug "DB: $db"
 	# Local mirror ? End by cd to cache, we may be installind. If --get
 	# was used we dl/copy in the current dir.
 	if [ -f "$uri/$file" ]; then
-		[ "$quiet" ] || echo "URI: $uri/"
-		[ "$get" ] || pwd=$CACHE_DIR
-		gettext "Local mirror:"; boldify " $file"
-		gettext "Copying file to:"; colorize " $pwd" 34
+		[ "$verbose" ] && echo "URI: $uri/"
+		gettext "Using local mirror:"; boldify " $file"
+		[ "$verbose" ] && (gettext "Copying file to:"; colorize " $pwd" 34)
 		cp -f $uri/$file $pwd
 		cd $pwd && return 0
 	fi
 	# In cache ? Root can use --cache to set destdir.
-	cd $CACHE_DIR
 	if [ -f "$CACHE_DIR/$file" ]; then
 		gettext "Using cache:"; colorize " ${file%.tazpkg}" 34
 		return 0
 	else
-		[ "$quiet" ] || echo "URL: $uri/"
-		gettext "Downloading:"; boldify " $file"
-		gettext "Destination:"; colorize " $pwd" 34
+		[ "$verbose" ] && echo "URL: $uri/"
+		if [ "$db" == "$PKGS_DB" ]; then
+			gettext "Using official mirror:"
+		else
+			gettext "Using extra mirror:"
+		fi
+		boldify " $file"
+		[ "$verbose" ] && (gettext "Destination:"; colorize " $pwd" 34)
 		if [ -f "$pwd/$file" ]; then
 			echo "File exist: $pwd/$file" && return 0
 		fi
+		# TODO: be a spider with wget -s to check if package is on mirror,
+		# if not try all official mirrors ?
 		wget $quiet -c $uri/$file -O $CACHE_DIR/$file
+		cd $CACHE_DIR && check_download
 	fi
 	# Be sure the file was fetched.
 	if [ ! -f "$pwd/$file" ] || [ ! -f "$CACHE_DIR/$file" ]; then
-		gettext "ERROR: Missing file:"; colorize "$file" 31
+		gettext "ERROR: Missing file:"; colorize " $file" 31
 		newline && exit 1
 	fi
+}
+
+# Unser var set by mirrored_pkg
+unset_mirrored() {
+	unset mirrored mirror db pwd
 }
 
 # Return the full package name, search in all packages.desc and break when

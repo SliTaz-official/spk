@@ -6,8 +6,8 @@
 # Copyright (C) SliTaz GNU/Linux - BSD License
 # Author: See AUTHORS files
 #
-#. /usr/lib/slitaz/libspk.sh
-. lib/libspk.sh
+. /usr/lib/slitaz/libspk.sh
+#. lib/libspk.sh
 
 #
 # Functions
@@ -109,7 +109,7 @@ do
 			[ "$count" == 0 ] && newline
 			count=$(($count + 1))
 			download $package_full $mirror
-			unset mirrored mirror db
+			unset_mirrored
 			newline && continue ;;
 	esac
 	# Installed ?
