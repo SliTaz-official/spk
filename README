@@ -24,7 +24,6 @@ functions:
 	* spk-rm     : Remove packages with confirm in option
 	* spk-up     : Upgrade the whole system
 	* spk-search : Search for packages or files
-	* spk-archive: Manage package extraction, compression, and packing
 	* spk-mirror : Manage official and extra mirrors
 
 
