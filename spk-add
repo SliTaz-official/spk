@@ -34,7 +34,9 @@ EOT
 }
 
 # Log install messages
+# Parameters: package
 log_install() {
+	local pkg=$1
 	debug "log_install: $logdir/$pkg/install.log"
 	mkdir -p $logdir/$pkg
 	tee $logdir/$pkg/install.log
@@ -85,12 +87,8 @@ install_package() {
 			gettext "Install missing dependencies"
 			if ! confirm; then
 				gettext "WARNING: Any dependencies installed"; newline
-			else
-				install_deps $package_name $DEPENDS
 			fi
-		else
 			install_deps $package_name $DEPENDS
-		fi
 	else
 		newline
 	fi
@@ -367,7 +365,7 @@ do
 	case "$pkg" in
 		*.tazpkg|*.spk)
 			count=$(($count + 1))
-			install_local $pkg | log_install ;;
+			install_local $pkg | log_install $pkg;;
 		*.deb|.rmp)
 			echo "TODO: spk-convert then install" ;;
 		*.*) gettext "WARNING: Not a valid package:"; echo " $pkg" ;;
@@ -375,7 +373,7 @@ do
 		*)
 			[ "$forced" ] || check_installed $pkg
 			count=$(($count + 1))
-			install_web $pkg | log_install ;;
+			install_web $pkg | log_install $pkg;;
 	esac
 done
 

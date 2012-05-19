@@ -50,7 +50,7 @@ remove_file() {
 # Remove a single package
 remove() {
 	altered=""
-	boldify $(gettext "Removing"; echo " $pkg")
+	boldify $(gettext "Removing") $pkg
 	separator
 	[ "$verbose" ] && echo "DB: $installed"
 
@@ -59,7 +59,7 @@ remove() {
 		[ -f $installed/$i/receipt ] || continue
 		unset_receipt
 		. $installed/$i/receipt
-		case " $(echo $DEPENDS) " in
+		case " $DEPENDS " in
 			*\ $pkg\ *) altered="$altered $i" ;;
 		esac
 	done

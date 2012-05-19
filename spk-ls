@@ -73,8 +73,8 @@ do
 					separator
 					read_pkgsdesc $extra/packages.desc
 					separator
-					boldify $(echo -n "$(cat $extra/packages.$SUM | wc -l) "
-					gettext "packages in:"; echo " $(basename $extra)")
+					boldify $(echo -n $(cat $extra/packages.$SUM | wc -l))
+					gettext "packages in:"; echo " $(basename $extra)"
 					newline
 				done
 				exit 0 ;;
@@ -83,7 +83,8 @@ do
 				cat $blocked
 			else
 				gettext "No blocked packages"; newline
-			fi && exit 0 ;;
+			fi
+			exit 0 ;;
 		--short)
 			newline
 			boldify $(gettext "Installed packages")
@@ -91,11 +92,12 @@ do
 			for pkg in $(ls -1 $installed)
 			do
 				. $installed/$pkg/receipt
-				echo -n "$(colorize 32 $pkg)"; indent 28 " $VERSION"
+				echo $(colorize 32 $pkg); indent 28 " $VERSION"
 			done
 			separator
 			boldify $(count_installed)
-			newline && exit 0 ;;
+			newline
+			exit 0 ;;
 		--*) continue ;;
 		*)
 			# List installed files by the package.
@@ -115,18 +117,18 @@ do
 						cat $modifiers
 						separator && newline
 					else
-						echo -n "$(boldify $pkg) "
-						gettext "package was not modified"; newline
+						echo $(boldify $pkg) $(gettext "package was not modified")
 					fi
 					continue
 				fi
-				boldify $(gettext "Installed files by"; echo " $pkg")
+				boldify $(gettext "Installed files by") $pkg
 				separator
 				cat $installed/$pkg/files.list
 				separator
-				gettext "Installed files by"; echo -n " $pkg: "
-				colorize 32 "$nb" && newline
-			done && exit 0 ;;
+				echo $(gettext "Installed files by") $pkg: 
+				colorize 32 $nb && newline
+			done
+			exit 0 ;;
 	esac
 done
 
@@ -137,7 +139,7 @@ done
 count=0
 
 newline
-boldify "$(gettext "Installed packages")"
+boldify $(gettext "Installed packages")
 separator
 for pkg in $installed/*
 do

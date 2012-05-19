@@ -65,8 +65,8 @@ extra_info() {
 	local db=$1
 	debug "extra DB: $extradb/$db"
 	nb=$(cat $extradb/$db/packages.$SUM 2>/dev/null | wc -l)
-	echo -n "Extra DB  :"; boldify " $db"
-	echo -n "Extra URL :"; echo " $(cat $extradb/$db/mirror)"
+	echo "Extra DB  : "$(boldify $db)
+	echo "Extra URL : "$(cat $extradb/$db/mirror)
 	gettext "Packages  :"; colorize 32 " $nb"
 }
 
@@ -79,13 +79,14 @@ addto_list() {
 	# Add PACKED_SIZE UNPACKED_SIZE to know packages size
 	# before installing ??? --> actually done via packages.txt
 	#
-	cat >> packages.desc << EOT
-$PACKAGE | ${VERSION}$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE
-EOT
+	
+	echo "$PACKAGE | ${VERSION}$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE" \
+	>> packages.desc
+	
 	# packages.equiv is used by tazpkg install to check depends.
 	touch packages.equiv
 	for i in $PROVIDE; do
-		dest=""
+		unset dest
 		echo $i | fgrep -q : && dest="${i#*:}:"
 		if grep -qs ^${i%:*}= packages.equiv; then
 			sed -i "s/^${i%:*}=/${i%:*}=${dest}$PACKAGE /" packages.equiv
@@ -95,6 +96,7 @@ EOT
 	done
 	# files.list provides a list of all packages files.
 	cat $tmpdir/files.list | sed s/^/"$PACKAGE: \0"/ >> $pkgsdir/files.list
+	cd - > /dev/null
 }
 
 #
@@ -261,7 +263,7 @@ do
 				echo "$pkgsdir/" > $db/mirror
 				for list in packages.*
 				do
-					gettext "Linking:"; echo -n " $list"
+					echo $(gettext "Linking:") $list
 					ln -s $pkgsdir/$list $db/$list
 					status
 				done

@@ -83,6 +83,10 @@ extract_fileslist() {
 	cd - >/dev/null
 }
 
+is_package_installed() {
+	[ -d "$installed/$1" ]
+}
+
 # Used by: list
 count_installed() {
 	local count=$(ls $installed | wc -l)

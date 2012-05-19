@@ -120,13 +120,13 @@ do
 				check_root
 				[ -d "$installed/$pkg" ] || continue
 				if grep -qs ^${pkg}$ $blocked; then
-					echo -n "$(boldify $pkg) "
-					gettext "is already blocked"; newline
+					echo $(boldify $pkg) $(gettext "is already blocked")
 				else
 					gettext "Blocking package:"; echo -n " $pkg"
 					echo $pkg >> $blocked
 					log "Blocked package: $pkg" && status
-				fi && continue ;;
+				fi
+				continue ;;
 			*\ --unblock\ *)
 				check_root
 				[ -d "$installed/$pkg" ] || continue
@@ -135,11 +135,11 @@ do
 					sed -i /"^${pkg}$"/d $blocked
 					log "Unblocked package: $pkg" && status
 				else
-					echo -n "$(boldify $pkg) "
-					gettext "is not blocked"; newline
-				fi && continue ;;
+					echo $(boldify $pkg) $(gettext "is not blocked")
+				fi
+				continue ;;
 			*\ --rm\ *)
-				[ -d "$installed/$pkg" ] || continue
+				is_package_installed $pkg || continue
 				spk-rm $pkg --count=$count
 				count=$(($count + 1))
 				continue ;;
@@ -161,13 +161,14 @@ do
 				else
 					colorize 36 $(gettext "Any upgrade log for:"; echo " $pkg")
 					newline
-				fi && continue ;;
+				fi
+				continue ;;
 		esac
 		count=$(($count + 1))
 		[ "$count" == 1 ] && newline
 		unset_receipt
 		. $installed/$pkg/receipt
-		boldify "$(gettext "Package") $pkg"
+		boldify $(gettext "Package") $pkg
 		separator
 		gettext "Status     :"; colorize 32 " installed"
 		receipt_info
@@ -186,13 +187,16 @@ do
 		esac
 		count=$(($count + 1))
 		[ "$count" == 1 ] && newline
-		boldify "$(gettext "Package") $pkg"
+		boldify $(gettext "Package") $pkg
 		separator
 		gettext "Status     :"; colorize 31 " not installed"
-		echo "$mirrored" | awk 'BEGIN { FS = "|" } ; { print \
-			"Version    :" $2 "\n" \
-			"Short desc :" $3 "\n" \
-			"Category   :" $4 }'
+		IFS="|"
+		local mirror_version mirror_desc empty mirror_cat
+		echo "$mirrored" | read empty mirror_version mirror_desc empty mirror_cat
+		echo "Version    :" $mirror_version
+		echo "Short desc :" $mirror_desc
+		echo "Category   :" $mirror_cat
+		unset IFS
 		separator && newline
 		continue
 	fi
