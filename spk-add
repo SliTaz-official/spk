@@ -107,10 +107,8 @@ install_package() {
 	[ "$verbose" ] && status
 
 	# Extract Package
-	cd $tmpdir || exit 1
 	rm receipt
-	spk-archive extract $package_file
-	cd - >/dev/null
+	extract_package $package_file $tmpdir
 
 	# Get files to remove if upgrading
 	local files_to_remove

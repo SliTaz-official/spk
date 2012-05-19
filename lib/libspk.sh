@@ -184,6 +184,47 @@ download() {
 	fi
 }
 
+# Extract .tazpkg cpio archive into a directory.
+# Parameters: package_file results_directory
+extract_package() {
+	local package_file=$1
+	local target_dir=$2
+
+	# Validate the file
+	check_valid_tazpkg $package_file
+
+	# Find the package name
+	local package_name=$(package_name $package_file)
+
+	# Create destination directory
+	local dest_dir=$(pwd)/$package_name
+	[ -n "$target_dir" ] && dest_dir=$target_dir/$package_name
+	mkdir -p $dest_dir
+
+	newline
+	echo $(boldify $(gettext "Extracting:")) $package_name
+	separator
+
+	gettext "Copying original package..."
+	cp $package_file $dest_dir
+	status
+	
+	cd $dest_dir	
+	size=$(du -sh $package_file | sed s/$package_file//)
+	echo -n $(gettext "Extracting archive"): $size
+	cpio -idm --quiet < ${package_file##*/}
+	rm -f ${package_file##*/}
+	unlzma -c fs.cpio.lzma | cpio -idm --quiet
+	rm fs.cpio.lzma
+	status
+	cd - > /dev/null
+	
+	separator
+	echo -n "$package_name"
+	gettext "is extracted to:"; echo " $dest_dir"
+	newline
+}
+
 # Unser var set by mirrored_pkg
 unset_mirrored() {
 	unset mirrored mirror db pwd

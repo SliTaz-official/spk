@@ -157,7 +157,7 @@ do
 	esac
 	# Be sure package is installed
 	if [ ! -f "$installed/$pkg/receipt" ]; then
-		echo -n "$(boldify "$pkg") "
+		echo -n "$(boldify $pkg) "
 		gettext "package is not installed"; newline
 		continue
 	fi
