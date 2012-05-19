@@ -84,7 +84,7 @@ extract_fileslist() {
 }
 
 is_package_installed() {
-	[ -d "$installed/$1" ]
+	[ -f "$installed/$1/receipt" ]
 }
 
 # Used by: list
