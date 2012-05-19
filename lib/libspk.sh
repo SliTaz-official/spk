@@ -210,7 +210,7 @@ extract_package() {
 	status
 	
 	cd $dest_dir	
-	size=$(du -sh $package_file | sed s/$package_file//)
+	size=$(du -sh $package_file | awk '{print $1}')
 	echo -n $(gettext "Extracting archive"): $size
 	cpio -idm --quiet < ${package_file##*/}
 	rm -f ${package_file##*/}

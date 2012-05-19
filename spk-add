@@ -89,6 +89,7 @@ install_package() {
 				gettext "WARNING: Any dependencies installed"; newline
 			fi
 			install_deps $package_name $DEPENDS
+		fi
 	else
 		newline
 	fi
@@ -106,8 +107,10 @@ install_package() {
 	$CHECKSUM $(basename $package_file) >> $installed.$SUM
 	[ "$verbose" ] && status
 
+	# Remove receipt that will be overwritten by extraction
+	rm $tmpdir/receipt
+	
 	# Extract Package
-	rm receipt
 	extract_package $package_file $tmpdir
 
 	# Get files to remove if upgrading
@@ -194,7 +197,6 @@ install_package() {
 		status
 		cd - >/dev/null
 	fi
-
 	# Merge package FS with $root
 	nb=$(cat files.list | wc -l)
 	gettext "Installing files:"; echo -n " $nb"
