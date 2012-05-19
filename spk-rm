@@ -67,9 +67,9 @@ remove() {
 	. $installed/$pkg/receipt
 
 	if [ "$altered" ]; then
-		gettext "The following packages depend on"; colorize " $pkg" 31
+		gettext "The following packages depend on"; colorize 31 " $pkg"
 		for i in $altered; do
-			echo "    $(colorize "$i" 32)"
+			echo "    $(colorize 32 $i)"
 		done
 	fi
 
@@ -169,7 +169,7 @@ done
 
 # Show all new counted packages in verbose mode
 if [ "$verbose" ]; then
-	gettext "Removed packages:"; colorize " $count" 34
+	gettext "Removed packages:"; colorize 34 " $count"
 fi
 
 exit 0

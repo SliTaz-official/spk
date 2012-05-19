@@ -46,7 +46,7 @@ check_mirror() {
 		gettext "Checking file:"; echo -n " $file"
 		if ! wget -q -s -T 6 ${1}${list} 2>/dev/null; then
 			newline
-			gettext "Unable to reach:"; colorize " $file" 31
+			gettext "Unable to reach:"; colorize 31 " $file"
 			newline && return 1
 		fi
 		status
@@ -67,7 +67,7 @@ extra_info() {
 	nb=$(cat $extradb/$db/packages.$SUM 2>/dev/null | wc -l)
 	echo -n "Extra DB  :"; boldify " $db"
 	echo -n "Extra URL :"; echo " $(cat $extradb/$db/mirror)"
-	gettext "Packages  :"; colorize " $nb" 32
+	gettext "Packages  :"; colorize 32 " $nb"
 }
 
 # Add a package to packages.* lists
@@ -119,13 +119,13 @@ case "$cmd" in
 		boldify " $(cat $mirrorurl)"
 		if [ -f "$mirrors" ]; then
 			nb=$(cat $mirrors | wc -l)
-			gettext "Mirrors  :"; colorize " $nb " $excolor
+			gettext "Mirrors  :"; colorize $excolor " $nb "
 		fi
 		if [ -d "$extradb" ]; then
 			extra=$(ls $extradb | wc -l)
 		fi
 		[ "$extra" != 0 ] || excolor=31
-		gettext "Extra    :"; colorize " $extra" $excolor
+		gettext "Extra    :"; colorize $excolor " $extra"
 		separator
 		newline
 		if [ "$list" ]; then
@@ -163,10 +163,10 @@ do
 				extra_db
 				if [ -d "$extradb/$db" ]; then
 					gettext "Removing extra mirror:"
-					echo -n " $(boldify "$db")"
+					echo -n " $(boldify $db)"
 					rm -rf $extradb/$db && status
 				else
-					gettext "Not an extra mirror:"; colorize " $db" 31
+					gettext "Not an extra mirror:"; colorize 31 " $db"
 				fi
 				newline && continue
 			fi
@@ -180,7 +180,7 @@ do
 					i486) arch="/" ;;
 				esac
 				url=${url}packages/${SLITAZ_RELEASE}${arch}
-				echo "URL: $(boldify "$url")"
+				echo "URL: $(boldify $url)"
 				echo "$url" > $mirrorurl
 				newline && continue
 			fi
@@ -192,7 +192,7 @@ do
 			else
 				boldify $(gettext "Enabling: extra mirror")
 				separator
-				echo "URL: $(boldify "$url")"
+				echo "URL: $(boldify $url)"
 				if ! check_mirror $url; then
 					continue
 				fi
@@ -214,7 +214,7 @@ do
 			fi
 			newline
 			gettext "Directory:"; boldify " $pkgsdir"
-			gettext "Packages :"; colorize " $nb" 32
+			gettext "Packages :"; colorize 32 " $nb"
 			cd $pkgsdir
 			if [ ! "$nodb" ]; then
 				time=$(date +%s)
@@ -247,7 +247,7 @@ do
 				time=$(($(date +%s) - $time))
 				echo -n "$nb "
 				gettext "packages added in"
-				echo " ${time}s ($(date "+%Y%m%d %H:%M"))"
+				echo " ${time}s ("$(date "+%Y%m%d %H:%M")")"
 			fi
 			newline
 			# Handle --extra: Use local repo as extra mirror with symlinks
@@ -279,7 +279,7 @@ do
 				newline && continue
 			fi
 			gettext "Can't handle:"
-			colorize " $url" 31 && newline ;;
+			colorize 31 " $url"; newline ;;
 	esac
 done
 

@@ -120,7 +120,7 @@ do
 				check_root
 				[ -d "$installed/$pkg" ] || continue
 				if grep -qs ^${pkg}$ $blocked; then
-					echo -n "$(boldify "$pkg") "
+					echo -n "$(boldify $pkg) "
 					gettext "is already blocked"; newline
 				else
 					gettext "Blocking package:"; echo -n " $pkg"
@@ -135,7 +135,7 @@ do
 					sed -i /"^${pkg}$"/d $blocked
 					log "Unblocked package: $pkg" && status
 				else
-					echo -n "$(boldify "$pkg") "
+					echo -n "$(boldify $pkg) "
 					gettext "is not blocked"; newline
 				fi && continue ;;
 			*\ --rm\ *)
@@ -148,18 +148,18 @@ do
 				if [ -f "$logdir/$pkg/install.log" ]; then
 					count=$(($count + 1))
 					[ "$count" == "1" ] && newline
-					colorize "$(gettext "Install log for:"; echo " $pkg")" 36
+					colorize 36 $(gettext "Install log for:"; echo " $pkg")
 					separator
 					cat $logdir/$pkg/install.log
 				else
 					gettext "Any install log for:"; boldify " $pkg"
 				fi
 				if [ -f "$logdir/$pkg/up.log" ]; then
-					colorize "$(gettext "Upgrade log for:"; echo " $pkg")" 36
+					colorize 36 $(gettext "Upgrade log for:"; echo " $pkg")
 					separator
 					cat $logdir/$pkg/up.log
 				else
-					colorize "$(gettext "Any upgrade log for:"; echo " $pkg")" 36
+					colorize 36 $(gettext "Any upgrade log for:"; echo " $pkg")
 					newline
 				fi && continue ;;
 		esac
@@ -169,7 +169,7 @@ do
 		. $installed/$pkg/receipt
 		boldify "$(gettext "Package") $pkg"
 		separator
-		gettext "Status     :"; colorize " installed" 32
+		gettext "Status     :"; colorize 32 " installed"
 		receipt_info
 		separator && newline
 		continue
@@ -188,7 +188,7 @@ do
 		[ "$count" == 1 ] && newline
 		boldify "$(gettext "Package") $pkg"
 		separator
-		gettext "Status     :"; colorize " not installed" 31
+		gettext "Status     :"; colorize 31 " not installed"
 		echo "$mirrored" | awk 'BEGIN { FS = "|" } ; { print \
 			"Version    :" $2 "\n" \
 			"Short desc :" $3 "\n" \

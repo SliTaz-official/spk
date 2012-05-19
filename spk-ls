@@ -54,7 +54,7 @@ do
 			exit 0 ;;
 		--mirror)
 			newline
-			boldify "$(gettext "Mirror") $(cat $mirrorurl)"
+			boldify $(gettext "Mirror") $(cat $mirrorurl)
 			read_pkgsdesc $pkgsdesc
 			separator
 			boldify $(count_mirrored)
@@ -64,10 +64,10 @@ do
 				for extra in $extradb/*
 				do
 					newline
-					boldify "$(gettext "Extra mirror")"
+					boldify $(gettext "Extra mirror")
 					if [ ! -f "$extra/packages.desc" ]; then
 						echo "URL: $(cat $extra/mirror)"
-						gettext "Missing:"; colorize " packages.desc" 31
+						gettext "Missing:"; colorize 31" packages.desc"
 						continue
 					fi
 					separator
@@ -82,16 +82,16 @@ do
 			if [ -s "$blocked" ]; then
 				cat $blocked
 			else
-				gettext "No blocked packages"; echo ""
+				gettext "No blocked packages"; newline
 			fi && exit 0 ;;
 		--short)
 			newline
-			boldify "$(gettext "Installed packages")"
+			boldify $(gettext "Installed packages")
 			separator
 			for pkg in $(ls -1 $installed)
 			do
 				. $installed/$pkg/receipt
-				echo -n "$(colorize "$pkg" 32)"; indent 28 " $VERSION"
+				echo -n "$(colorize 32 $pkg)"; indent 28 " $VERSION"
 			done
 			separator
 			boldify $(count_installed)
@@ -110,12 +110,12 @@ do
 				if [ "$modifiers" ]; then
 					modifiers=$installed/$pkg/modifiers
 					if [ -f "$modifiers" ]; then
-						boldify "$(gettext "Modifiers for") $pkg"
+						boldify $(gettext "Modifiers for") $pkg
 						separator
 						cat $modifiers
 						separator && newline
 					else
-						echo -n "$(boldify "$pkg") "
+						echo -n "$(boldify $pkg) "
 						gettext "package was not modified"; newline
 					fi
 					continue
@@ -125,7 +125,7 @@ do
 				cat $installed/$pkg/files.list
 				separator
 				gettext "Installed files by"; echo -n " $pkg: "
-				colorize "$nb" 32 && newline
+				colorize 32 "$nb" && newline
 			done && exit 0 ;;
 	esac
 done
@@ -145,7 +145,7 @@ do
 	. $pkg/receipt
 	count=$(($count + 1))
 	[ "$count" != 1 ] && newline
-	gettext "Package    :"; colorize " $PACKAGE" 32
+	gettext "Package    :"; colorize 32 " $PACKAGE"
 	receipt_info
 done
 separator

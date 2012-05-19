@@ -11,8 +11,8 @@ boldify "Checking: spk bc"
 #./spk-rm bc
 
 # Check libspk.sh functions usage.
-echo -n "$(boldify "Checking: libspk.sh functions")"
-indent 34 "$(colorize $(grep "[a-z]() {" lib/libspk.sh | wc -l) 32)"
+echo -n $(boldify "Checking: libspk.sh functions")
+indent 34 $(colorize 32 $(grep "[a-z]() {" lib/libspk.sh | wc -l))
 separator
 grep "[a-z]() {" lib/libspk.sh | while read line
 do

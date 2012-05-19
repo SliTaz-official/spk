@@ -53,10 +53,10 @@ read_pkgsdesc() {
 	cat $list | while read package version desc category
 	do
 		if [ "$short" ]; then
-			echo -n "$(colorize "$package" 32)"; indent 28 " $version"
+			echo -n "$(colorize 32 "$package")"; indent 28 " $version"
 		else
 			newline
-			gettext "Package    :"; colorize " $package" 32
+			gettext "Package    :"; colorize 32 " $package"
 			gettext "Version    :"; echo "$version"
 			gettext "Short desc :"; echo "$desc"
 		fi
@@ -148,13 +148,13 @@ download() {
 	if [ -f "$uri/$file" ]; then
 		[ "$verbose" ] && echo "URI: $uri/"
 		gettext "Using local mirror:"; boldify " $file"
-		[ "$verbose" ] && (gettext "Copying file to:"; colorize " $pwd" 34)
+		[ "$verbose" ] && (gettext "Copying file to:"; colorize 34 " $pwd")
 		cp -f $uri/$file $pwd
 		cd $pwd && return 0
 	fi
 	# In cache ? Root can use --cache to set destdir.
 	if [ -f "$CACHE_DIR/$file" ]; then
-		gettext "Using cache:"; colorize " ${file%.tazpkg}" 34
+		gettext "Using cache:"; colorize 34 " ${file%.tazpkg}"
 		return 0
 	else
 		[ "$verbose" ] && echo "URL: $uri/"
@@ -164,7 +164,7 @@ download() {
 			gettext "Using extra mirror:"
 		fi
 		boldify " $file"
-		[ "$verbose" ] && (gettext "Destination:"; colorize " $pwd" 34)
+		[ "$verbose" ] && (gettext "Destination:"; colorize 34 " $pwd")
 		if [ -f "$pwd/$file" ]; then
 			echo "File exist: $pwd/$file" && return 0
 		fi
@@ -175,7 +175,7 @@ download() {
 	fi
 	# Be sure the file was fetched.
 	if [ ! -f "$pwd/$file" ] || [ ! -f "$CACHE_DIR/$file" ]; then
-		gettext "ERROR: Missing file:"; colorize " $file" 31
+		gettext "ERROR: Missing file:"; colorize 31 " $file"
 		newline && exit 1
 	fi
 }
@@ -256,7 +256,7 @@ missing_deps() {
 		fi
 	done
 
-	gettext "Missing dependencies:"; echo " $(colorize "$deps" 34)"
+	gettext "Missing dependencies:"; echo " $(colorize 34 "$deps")"
 
 	# Return true if missing deps
 	[ "$deps" != "0" ]
