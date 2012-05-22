@@ -73,16 +73,22 @@ extra_info() {
 # Add a package to packages.* lists
 addto_list() {
 	cd $pkgsdir
-	echo "$PACKAGE-${VERSION}${EXTRAVERSION}" >> packages.list
+
+	# We need ARCH set the get correct version.
+	ARCH=$(fgrep ARCH= /etc/slitaz/cook.conf | cut -d "\"" -f 2)
+	case "$ARCH" in
+		arm|x86_64) arch="-${ARCH}" ;;
+	esac
+
+	echo "$PACKAGE-${VERSION}${EXTRAVERSION}${arch}" >> packages.list
 	$CHECKSUM $(basename $pkg) >> packages.$SUM
 	#
-	# Add PACKED_SIZE UNPACKED_SIZE to know packages size
-	# before installing ??? --> actually done via packages.txt
+	# Add PACKED_SIZE UNPACKED_SIZE to know packages size before installing ???
+	# --> actually done via packages.txt. Use: ${VERSION}${EXTRAVERSION}${arch} ???
 	#
-	
 	echo "$PACKAGE | ${VERSION}$EXTRAVERSION | $SHORT_DESC | $CATEGORY | $WEB_SITE" \
-	>> packages.desc
-	
+		>> packages.desc
+
 	# packages.equiv is used by tazpkg install to check depends.
 	touch packages.equiv
 	for i in $PROVIDE; do
