@@ -37,7 +37,7 @@ $(boldify $(gettext "Options:"))
   --cache     $(gettext "Used with --get to download in cache")
   --forced    $(gettext "Force packages reinstall or download")
   --root=     $(gettext "Set the root file system path")
-  --debug     $(gettext "Display some usefull debug information")
+  --debug     $(gettext "Display some useful debug information")
 
 $(boldify $(gettext "Examples:"))
   $name package1 package2 packageN

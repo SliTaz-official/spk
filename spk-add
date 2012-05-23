@@ -24,7 +24,7 @@ $(gettext "Install SliTaz Packages")
 $(boldify $(gettext "Options:"))
   --forced    $(gettext "Force package reinstallation")
   --root=     $(gettext "Set the root file system path")
-  --debug     $(gettext "Display some usefull debug information")
+  --debug     $(gettext "Display some useful debug information")
 
 $(boldify $(gettext "Examples:"))
   $name package1 package2 packageN

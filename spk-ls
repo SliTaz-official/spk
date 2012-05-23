@@ -30,7 +30,7 @@ $(boldify $(gettext "Options:"))
   --modifiers  $(gettext "List package modifiers")
   --root=      $(gettext "Set the root file system path")
   --color=NB   $(gettext "Set package name color in list")
-  --debug      $(gettext "Display some usefull debug information")
+  --debug      $(gettext "Display some useful debug information")
 
 $(boldify $(gettext "Examples:"))
   $name package1 package2 packageN

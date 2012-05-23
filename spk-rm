@@ -19,7 +19,7 @@ usage() {
 
 $(boldify $(gettext "Usage:")) $name [packages|--options]
 
-$(gettext "Remove installed packages and ther dependencies")
+$(gettext "Remove installed packages and their dependencies")
 
 $(boldify $(gettext "Options:"))
   --confirm   $(gettext "Ask before removing any packages")
