@@ -92,7 +92,7 @@ do
 			for pkg in $(ls -1 $installed)
 			do
 				. $installed/$pkg/receipt
-				echo -n $(colorize 32 $pkg); indent 28 " $VERSION"
+				echo -n "$(colorize 32 $pkg)"; indent 28 " $VERSION"
 			done
 			separator
 			boldify $(count_installed)

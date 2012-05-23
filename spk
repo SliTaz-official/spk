@@ -163,6 +163,10 @@ do
 					newline
 				fi
 				continue ;;
+			*\ --extract\ *)
+					newline
+					echo $(boldify $(gettext "Extracting:")) $pkg
+					separator ;;
 		esac
 		count=$(($count + 1))
 		[ "$count" == 1 ] && newline

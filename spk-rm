@@ -89,7 +89,7 @@ remove() {
 
 	# Remove all files
 	fileslist=$installed/$PACKAGE/files.list
-	gettext "Removing installed files:"
+	gettext "Installed files:"
 	echo -n " $(wc -l $fileslist | cut -d " " -f 1)"
 	[ "$verbose" ] && newline
 	for file in $(cat $fileslist)

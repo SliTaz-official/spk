@@ -109,9 +109,11 @@ install_package() {
 
 	# Remove receipt that will be overwritten by extraction
 	rm $tmpdir/receipt
-	
+
 	# Extract Package
+	debug "extract_package $package_file $tmpdir"
 	extract_package $package_file $tmpdir
+	tmpdir="$tmpdir/$PACKAGE-$VERSION"
 
 	# Get files to remove if upgrading
 	local files_to_remove
