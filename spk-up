@@ -242,7 +242,7 @@ upnb=$(cat $pkgsup | wc -l)
 pkgs=$(ls | wc -l)
 time=$(($(date +%s) - $time))
 
-if [ "$upnb" == 0 ]; then
+if [ "$upnb" == 0 ] && [ "$blocked_count" == 0 ]; then
 	gettext "System is up-to-date..."; newline
 fi
 separator
