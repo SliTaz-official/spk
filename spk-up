@@ -112,17 +112,6 @@ up_type() {
 	echo -n "$PACKAGE"
 	echo -n $(indent 28 "$VERSION")
 
-	# Mirror name
-	case $repo in
-		$PKGS_DB) reponame=$(gettext "Official") ;;
-		*) reponame=$(gettext "Extra") ;;
-	esac
-	# Local have priority
-	if [ -d "$localdb" ] && $(grep -q "^$PACKAGE |" $extradb/local/packages.desc); then
-		#local_count=$(($local_count + 1))
-		reponame=$(gettext "Local")
-	fi
-
 	# Blocked
 	if $(grep -qs "^$PACKAGE" $blocked); then
 		blocked_count=$(($blocked_count + 1))
@@ -147,17 +136,29 @@ up_type() {
 check_pkgup() {
 	unset_receipt
 	. $pkg/receipt
+	localdb=$extradb/local
 	sum=$(fgrep "  $PACKAGE-${VERSION}$EXTRAVERSION.tazpkg" \
 		$installed.$SUM | awk '{print $1}')
 
 	# Skip up-to-date local packages
 	if [ -d "$extradb/local" ] && fgrep -q "$sum  $PACKAGE-" $extradb/local/packages.$SUM; then
-		continue
+		reponame=$(gettext "Local")
+		return 0
 	fi
 
 	for repo in $(priority); do
 		dbdesc=$repo/packages.desc
 		dbsum=$repo/packages.$SUM
+
+		# Mirror name
+		case $repo in
+			$PKGS_DB) reponame=$(gettext "Official") ;;
+			*) reponame=$(gettext "Extra") ;;
+		esac
+		# Overwrite: Local have priority
+		if [ -d "$extradb/local" ] && $(grep -q "^$PACKAGE |" $extradb/local/packages.desc); then
+			reponame=$(gettext "Local")
+		fi
 
 		# Sum match or not ?
 		if ! fgrep -q "$sum  $PACKAGE-" $dbsum; then
@@ -195,18 +196,17 @@ do
 			if [ -f "$installed/$pkg/receipt" ]; then
 				count=$(($count +1))
 				cd $installed
+				. $pkg/receipt
 				check=$(check_pkgup)
 				if [ "$check" != "" ]; then
 					echo "$check"
 					[ "$add" ] && install_up
 				else
-					if $(grep -qs "^${pkg}$" $blocked); then
-						echo -n $(colorize 31 "$pkg $VERSION ")
-						gettext "is blocked"; newline
-					else
-						echo -n $(boldify "$pkg $VERSION ")
-						gettext "is up-to-date. Version"; newline
-					fi
+					echo -n "$pkg"
+					echo -n $(indent 28 "$VERSION")
+					echo -n $(colorize 32 $(indent 48 $(gettext "up-to-date")))
+					check_pkgup
+					indent 68 "$reponame"
 				fi
 			fi ;;
 	esac
