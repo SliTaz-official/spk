@@ -226,6 +226,7 @@ time=$(date +%s)
 build_count=0
 blocked_count=0
 
+recharge_lists
 up_headers
 cd $installed
 newline > $pkgsup
