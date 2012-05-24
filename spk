@@ -194,13 +194,9 @@ do
 		boldify $(gettext "Package") $pkg
 		separator
 		gettext "Status     :"; colorize 31 " not installed"
-		IFS="|"
-		local mirror_version mirror_desc empty mirror_cat
-		echo "$mirrored" | read empty mirror_version mirror_desc empty mirror_cat
-		echo "Version    :" $mirror_version
-		echo "Short desc :" $mirror_desc
-		echo "Category   :" $mirror_cat
-		unset IFS
+		gettext "Version    :"; echo "$mirrored" | cut -d '|' -f 2
+		gettext "Short desc :"; echo "$mirrored" | cut -d '|' -f 3
+		gettext "Category   :"; echo "$mirrored" | cut -d '|' -f 4
 		separator && newline
 		continue
 	fi
