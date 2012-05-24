@@ -103,7 +103,7 @@ install_package() {
 	if [ "$verbose" ]; then
 		gettext "Incrementing:"; echo -n " $(basename $installed.$SUM)"
 	fi
-	sed -i "/$(basename $package_file)/"d $installed.$SUM 2>/dev/null
+	sed -i "/  $PACKAGE-$VERSION*/"d $installed.$SUM 2>/dev/null
 	$CHECKSUM $(basename $package_file) >> $installed.$SUM
 	[ "$verbose" ] && status
 
@@ -111,7 +111,7 @@ install_package() {
 	rm $tmpdir/receipt
 
 	# Extract Package
-	debug "extract_package $package_file $tmpdir"
+	#debug "extract_package $package_file $tmpdir"
 	extract_package $package_file $tmpdir
 	tmpdir="$tmpdir/$PACKAGE-$VERSION"
 
@@ -339,8 +339,7 @@ install_deps() {
 		# Check if package is not installed
 		if [ ! -d "$installed/$pkg" ]; then
 			if [ ! -f "$pkgsdesc" ]; then
-				#spk-up --list
-				tazpkg recharge
+				spk-up --list
 			fi
 			spk-add $pkg
 		fi

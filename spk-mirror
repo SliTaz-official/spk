@@ -269,7 +269,7 @@ do
 				echo "$pkgsdir/" > $db/mirror
 				for list in packages.*
 				do
-					echo $(gettext "Linking:") $list
+					echo -n $(gettext "Linking:") $list
 					ln -s $pkgsdir/$list $db/$list
 					status
 				done

@@ -17,6 +17,7 @@ installed="${root}${PKGS_DB}/installed"
 pkgsdesc="${root}${PKGS_DB}/packages.desc"
 pkgsmd5="${root}${PKGS_DB}/packages.$SUM"
 pkgsequiv="${root}${PKGS_DB}/packages.equiv"
+pkgsup="${root}${PKGS_DB}/packages.up"
 blocked="${root}${PKGS_DB}/blocked.list"
 activity="${root}${PKGS_DB}/activity"
 logdir="${root}/var/log/spk"
@@ -30,6 +31,10 @@ tmpdir="/tmp/spk/$RANDOM"
 if [ ! -d "${root}${PKGS_DB}" ]; then
 	gettext "Can't find DB:"; echo " ${root}${PKGS_DB}"
 	exit 1
+fi
+
+if [ ! -d "${root}${extradb}" ]; then
+	mkdir -p ${root}${extradb}
 fi
 
 #
