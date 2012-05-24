@@ -100,8 +100,8 @@ priority() {
 	for i in $extras; do
 		extras="$extradb/$i"
 	done
-	[ -d "$extradb/local" ] && localdb="$extradb/local"
-	echo "$localdb $extras $PKGS_DB"
+	[ -d "$extradb/local" ] && local="$extradb/local"
+	echo "$local $extras $PKGS_DB"
 }
 
 # Types: blocked, new build or new version
@@ -141,7 +141,7 @@ check_pkgup() {
 		$installed.$SUM | awk '{print $1}')
 
 	# Skip up-to-date local packages
-	if [ -d "$extradb/local" ] && fgrep -q "$sum  $PACKAGE-" $extradb/local/packages.$SUM; then
+	if [ -d "$localdb" ] && fgrep -q "$sum  $PACKAGE-" $localdb/packages.$SUM; then
 		reponame=$(gettext "Local")
 		return 0
 	fi
@@ -156,7 +156,7 @@ check_pkgup() {
 			*) reponame=$(gettext "Extra") ;;
 		esac
 		# Overwrite: Local have priority
-		if [ -d "$extradb/local" ] && $(grep -q "^$PACKAGE |" $extradb/local/packages.desc); then
+		if [ -d "$localdb" ] && fgrep -q "$sum  $PACKAGE-" $localdb/packages.$SUM; then
 			reponame=$(gettext "Local")
 		fi
 
