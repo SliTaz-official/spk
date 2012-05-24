@@ -201,10 +201,10 @@ do
 		continue
 	fi
 	unset mirrored
-	# Skip options such as --confirm or unknow package
+	# Skip options such as --confirm or unknown package
 	case "$pkg" in
 		--*) continue ;;
-		*) gettext "WARNING: Unknow package"; echo ": $pkg"
+		*) gettext "WARNING: Unknown package"; echo ": $pkg"
 	esac
 done
 exit 0
