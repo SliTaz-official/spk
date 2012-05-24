@@ -1,0 +1,285 @@
+#!/bin/sh
+#
+# Spk-up - Update packages. Read the README before adding or
+# modifing any code in spk!
+#
+# Copyright (C) SliTaz GNU/Linux - BSD License
+# Author: See AUTHORS files
+#
+. /usr/lib/slitaz/libspk.sh
+
+#
+# Functions
+#
+
+# Help and usage
+usage() {
+	name=$(basename $0)
+	cat << EOT
+
+$(boldify $(gettext "Usage:")) $name [packages|--options]
+
+$(gettext "Update packages lists and upgrade the system")
+
+$(boldify $(gettext "Options:"))
+  --list       $(gettext "Recharges the packages lists")
+  --add        $(gettext "Install upgrade automaticaly")
+  --forced     $(gettext "Force recharging the lists")
+  --mirror=    $(gettext "Specify a mirror to check")
+
+$(boldify $(gettext "Examples:"))
+  $name package1 package2
+  $name --list --forced --mirror=main
+
+EOT
+	exit 0
+}
+
+# Headers fo system or packages update
+up_headers() {
+	newline
+	boldify $(gettext "Package") \
+	$(echo -n $(indent 28 $(gettext "Version"))) \
+	$(echo -n $(indent 48 $(gettext "Status"))) \
+	$(echo -n $(indent 68 $(gettext "Mirror")))
+	separator
+}
+
+# Recharges all list from one mirror or all mirrors
+recharge_lists() {
+	check_root
+	newline
+	boldify $(gettext "Updating packages lists")
+	separator
+	check="$extradb/*/mirror $PKGS_DB/mirror"
+	if [ "$mirror" ]; then
+		check=$extradb/$mirror/mirror
+		[ "$mirror" == "main" ] && check=$PKGS_DB/mirror
+	fi
+	for mirror in $check; do
+		[ -f "$mirror" ] || continue
+		# Skip local mirror
+		[ ! $(readlink $(dirname $mirror)/packages.desc) ] || continue
+		# Get want a mirror name and download url
+		name=$(basename $(dirname $mirror))
+		url=$(cat $mirror)
+		lists="packages.list packages.md5 packages.desc packages.equiv files.list.lzma"
+		[ "$(dirname $mirror)" == "$PKGS_DB" ] && name="main"
+		[ "$quiet" ] && quiet="-q"
+
+		gettext "Checking mirror:"; colorize 34 " $name"
+		cd $(dirname $mirror)
+
+		# ID
+		[ -f "ID" ] || echo "$$" > ID
+		mv ID ID.bak
+		wget -q ${url%/}/ID
+		debug "ID: $(cat ID)"
+		debug "ID.bak: $(cat ID.bak)"
+		if [ $(cat ID) == $(cat ID.bak) ] && [ ! "$forced" ]; then
+			gettext "Mirror is up-to-date"; newline
+			continue
+		fi
+
+		# Backup and get all lists
+		for list in $lists
+		do
+			[ -f "$list" ] && cp -f $list $list.bak
+			debug "url: ${url%/}/$list"
+			rm -f $list
+			busybox wget $quiet ${url%/}/$list
+		done
+	done
+	separator
+	newline
+}
+
+# Repo priority: local, extras then official
+priority() {
+	extras=$(ls $extradb | sed s"/local//")
+	for i in $extras; do
+		extras="$extradb/$i"
+	done
+	[ -d "$extradb/local" ] && localdb="$extradb/local"
+	echo "$localdb $extras $PKGS_DB"
+}
+
+# Types: blocked, new build or new version
+up_type() {
+	# Jump to next repository if pkg doesn't exists in this one.
+	grep -q "^$PACKAGE |" $dbdesc || continue
+
+	echo -n "$PACKAGE"
+	echo -n $(indent 28 "$VERSION")
+
+	# Mirror name
+	case $repo in
+		$PKGS_DB) reponame=$(gettext "Official") ;;
+		*) reponame=$(gettext "Extra") ;;
+	esac
+	# Local have priority
+	if [ -d "$localdb" ] && $(grep -q "^$PACKAGE |" $extradb/local/packages.desc); then
+		#local_count=$(($local_count + 1))
+		reponame=$(gettext "Local")
+	fi
+
+	# Blocked
+	if $(grep -qs "^$PACKAGE" $blocked); then
+		blocked_count=$(($blocked_count + 1))
+		echo -n $(colorize 31 $(indent 48 $(gettext "Blocked")))
+		indent 68 "$reponame"
+		break
+	fi
+
+	new=$(grep "^$PACKAGE |" $dbdesc | awk '{print $3}')
+
+	if [ "$VERSION" == "$new" ]; then
+		build_count=$(($build_count + 1))
+		echo -n $(colorize 34 $(indent 48 $(gettext "New build")))
+	else
+		echo -n $(colorize 32 $(indent 48 $(gettext "New") $new))
+	fi
+	indent 68 "$reponame"
+	echo "$PACKAGE" >> $pkgsup
+}
+
+# Check if we have an upgrade for a package
+check_pkgup() {
+	unset_receipt
+	. $pkg/receipt
+	sum=$(fgrep "  $PACKAGE-${VERSION}$EXTRAVERSION.tazpkg" \
+		$installed.$SUM | awk '{print $1}')
+
+	# Skip up-to-date local packages
+	if [ -d "$extradb/local" ] && fgrep -q "$sum  $PACKAGE-" $extradb/local/packages.$SUM; then
+		continue
+	fi
+
+	for repo in $(priority); do
+		dbdesc=$repo/packages.desc
+		dbsum=$repo/packages.$SUM
+
+		# Sum match or not ?
+		if ! fgrep -q "$sum  $PACKAGE-" $dbsum; then
+			up_type
+			break
+		fi
+	done
+}
+
+# Log and install an upgradable package.
+install_up() {
+	mirrored_pkg $pkg
+	vers=$(echo "$mirrored" | awk '{print $3}')
+	mkdir -p $logdir/$pkg
+	echo "$(date '+%Y-%m-%d %H:%M') : Upgrade to $vers" >> $logdir/$pkg/up.log
+	spk-add $pkg --forced
+}
+
+#
+# Handle packages and --options
+#
+
+count=0
+
+for arg in $@
+do
+	case "$arg" in
+		*usage|*help) usage ;;
+		--list) recharge_lists && exit 0 ;;
+		--*) continue ;;
+		*)
+			pkg=$arg
+			system=no
+			[ "$count" == 0 ] && up_headers
+			if [ -f "$installed/$pkg/receipt" ]; then
+				count=$(($count +1))
+				cd $installed
+				check=$(check_pkgup)
+				if [ "$check" != "" ]; then
+					echo "$check"
+					[ "$add" ] && install_up
+				else
+					if $(grep -qs "^${pkg}$" $blocked); then
+						echo -n $(colorize 31 "$pkg $VERSION ")
+						gettext "is blocked"; newline
+					else
+						echo -n $(boldify "$pkg $VERSION ")
+						gettext "is up-to-date. Version"; newline
+					fi
+				fi
+			fi ;;
+	esac
+done
+
+# Skip system-wide upgrade if some packages was updated individually.
+if [ "$system" ]; then
+	[ "$add" ] || newline
+	exit 0
+fi
+
+#
+# Check all mirrors list and upgrade system.
+#
+
+time=$(date +%s)
+build_count=0
+blocked_count=0
+
+up_headers
+cd $installed
+newline > $pkgsup
+
+# Check all installed packages
+for pkg in *
+do
+	check_pkgup
+done
+
+# Remove empty line and count
+sed -i /^$/d $pkgsup
+upnb=$(cat $pkgsup | wc -l)
+pkgs=$(ls | wc -l)
+time=$(($(date +%s) - $time))
+
+if [ "$upnb" == 0 ]; then
+	gettext "System is up-to-date..."; newline
+fi
+separator
+echo -n "$pkgs "; gettext "installed packages scanned in"; echo " ${time}s"
+newline
+
+# Summary
+boldify $(gettext "Packages upgrade summary")
+separator
+gettext "New version :"; colorize 32 " $(($upnb - $build_count))"
+gettext "New build   :"; colorize 34 " $build_count"
+gettext "Blocked     :"; colorize 31 " $blocked_count"
+separator
+newline
+
+# Pkgs to upgrade ? Skip, let --add/--install them all or ask user
+if [ "$upnb" -gt 0 ]; then
+	if [ "$add" ] || [ "$install" ]; then
+		continue
+	else
+		gettext "Do you wish to upgrade now"
+		if ! confirm; then
+			gettext "Upgrade cancelled"
+			echo -e "\n" && exit 0
+		fi
+	fi
+	# Install and log all upgrade
+	for pkg in $(cat $pkgsup)
+	do
+		install_up
+	done
+	# List is generated each time and must be cleaned so
+	# tazpkg-notify dont find upgrade anymore.
+	rm $pkgsup && touch $pkgsup
+	newline
+	gettext "Handeled upgrades:"; colorize 32 " $upnb"
+	newline
+fi
+
+exit 0
