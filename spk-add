@@ -119,7 +119,7 @@ install_package() {
 	case "$SLITAZ_ARCH" in
 		arm|x86_64) arch="-${SLITAZ_ARCH}" ;;
 	esac
-	tmpdir="$tmpdir/$PACKAGE-${VERSION}${arch}" 
+	tmpdir="$tmpdir/$PACKAGE-${VERSION}${arch}"
 
 	# Get files to remove if upgrading
 	local files_to_remove
@@ -300,12 +300,6 @@ install_web() {
 	#fi
 
 	# Check if package is mirrored
-	#if ! mirrored_pkg $package_name; then
-		#gettext "Could not find package on mirror:"
-		#boldify " $package_name" && exit 1
-	#fi
-
-	# Check if package is mirrored
 	mirrored_pkg $package_name
 	if [ ! "$mirrored" ]; then
 		gettext "Could not find package on mirror:"
@@ -313,7 +307,14 @@ install_web() {
 	fi
 
 	# We want: package-version.tazpkg
-	local package_full=$(full_package $package_name)
+	local package_full=$(full_package ${package_name})
+
+	# Add architecture string to package full name
+	case "$SLITAZ_ARCH" in
+		arm|x86_64)
+			pkgarch="-${SLITAZ_ARCH}.tazpkg"
+			package_full=$(echo $package_full | sed s/.tazpkg/$pkgarch/) ;;
+	esac
 
 	# Let fetch the package by download()
 	[ "$count" == 1 ] && newline
