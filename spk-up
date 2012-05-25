@@ -47,7 +47,6 @@ up_headers() {
 
 # Recharges all list from one mirror or all mirrors
 recharge_lists() {
-	check_root
 	newline
 	boldify $(gettext "Updating packages lists")
 	separator
@@ -186,13 +185,15 @@ for arg in $@
 do
 	case "$arg" in
 		*usage|*help) usage ;;
-		--list) 
-			recharge_lists 
+		--list)
+			check_root
+			recharge_lists
 			newline && exit 0 ;;
 		--*) continue ;;
 		*)
-			pkg=$arg
+			pkg="$arg"
 			system=no
+			check_root
 			[ "$count" == 0 ] && up_headers
 			if [ -f "$installed/$pkg/receipt" ]; then
 				count=$(($count +1))
@@ -227,6 +228,7 @@ time=$(date +%s)
 build_count=0
 blocked_count=0
 
+check_root
 recharge_lists
 up_headers
 cd $installed
