@@ -91,7 +91,6 @@ recharge_lists() {
 		done
 	done
 	separator
-	newline
 }
 
 # Repo priority: local, extras then official
@@ -187,7 +186,9 @@ for arg in $@
 do
 	case "$arg" in
 		*usage|*help) usage ;;
-		--list) recharge_lists && exit 0 ;;
+		--list) 
+			recharge_lists 
+			newline && exit 0 ;;
 		--*) continue ;;
 		*)
 			pkg=$arg
