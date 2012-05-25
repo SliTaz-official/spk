@@ -151,12 +151,13 @@ check_pkgup() {
 		# Mirror name
 		case $repo in
 			$PKGS_DB) reponame=$(gettext "Official") ;;
+			$localdb) reponame=$(gettext "Local") ;;
 			*) reponame=$(gettext "Extra") ;;
 		esac
 		# Overwrite: Local have priority
-		if [ -d "$localdb" ] && fgrep -q "$sum  $PACKAGE-" $localdb/packages.$SUM; then
-			reponame=$(gettext "Local")
-		fi
+		#if [ -d "$localdb" ] && fgrep -q "$sum  $PACKAGE-" $localdb/packages.$SUM; then
+			#reponame=$(gettext "Local")
+		#fi
 
 		# Sum match or not ?
 		if ! fgrep -q "$sum  $PACKAGE-" $dbsum; then
