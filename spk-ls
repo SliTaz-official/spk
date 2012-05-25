@@ -67,6 +67,7 @@ do
 		--mirror)
 			newline
 			boldify $(gettext "Mirror") $(cat $mirrorurl)
+			separator
 			read_pkgsdesc $pkgsdesc
 			separator
 			boldify $(count_mirrored)
@@ -138,8 +139,8 @@ do
 				separator
 				cat $installed/$pkg/files.list
 				separator
-				echo $(gettext "Installed files by") $pkg:
-				colorize 32 $nb && newline
+				echo -n "$(gettext "Installed files by") $pkg: "
+				colorize 32 "$nb" && newline
 			done
 			exit 0 ;;
 	esac
