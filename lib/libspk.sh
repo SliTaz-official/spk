@@ -37,6 +37,10 @@ if [ ! -d "${root}${extradb}" ]; then
 	mkdir -p ${root}${extradb}
 fi
 
+if [ ! -d "${root}${CACHE_DIR}" ]; then
+	mkdir -p ${root}${CACHE_DIR}
+fi
+
 #
 # Functions
 #
