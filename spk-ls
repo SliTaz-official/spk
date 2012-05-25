@@ -40,6 +40,18 @@ EOT
 	exit 0
 }
 
+# Source a package receipt
+source_receipt() {
+	local receipt=$1
+	if [ ! -f $receipt ]; then
+		echo -n $(colorize 31 "$pkg")
+		indent 28 $(gettext "missing receipt")
+		continue
+	else
+		. $receipt
+	fi
+}
+
 #
 # Handle --options
 #
@@ -87,12 +99,13 @@ do
 			exit 0 ;;
 		--short)
 			newline
-			boldify $(gettext "Installed packages")
+			echo -n $(boldify $(gettext "Package"))
+			indent 28 $(boldify $(gettext "Version"))
 			separator
 			for pkg in $(ls -1 $installed)
 			do
-				. $installed/$pkg/receipt
-				echo -n "$(colorize 32 $pkg)"; indent 28 " $VERSION"
+				source_receipt $installed/$pkg/receipt
+				echo -n "$(colorize 32 $pkg)"; indent 28 "$VERSION"
 			done
 			separator
 			boldify $(count_installed)
