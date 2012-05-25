@@ -98,6 +98,7 @@ install_package() {
 	separator
 	gettext "Copying package..."
 	cp $package_file $tmpdir && status
+	cd $tmpdir
 
 	# Add package checksum to $installed.$SUM
 	if [ "$verbose" ]; then
@@ -113,7 +114,12 @@ install_package() {
 	# Extract Package
 	#debug "extract_package $package_file $tmpdir"
 	extract_package $package_file $tmpdir
-	tmpdir="$tmpdir/$PACKAGE-$VERSION"
+
+	# Handle cross compiled packages
+	case "$SLITAZ_ARCH" in
+		arm|x86_64) arch="-${SLITAZ_ARCH}" ;;
+	esac
+	tmpdir="$tmpdir/$PACKAGE-${VERSION}${arch}" 
 
 	# Get files to remove if upgrading
 	local files_to_remove
