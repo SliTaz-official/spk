@@ -24,6 +24,7 @@ $(gettext "Install SliTaz Packages")
 $(boldify $(gettext "Options:"))
   --forced    $(gettext "Force package reinstallation")
   --root=     $(gettext "Set the root file system path")
+  --nodeps    $(gettext "Don't resolv packages dependencies")
   --debug     $(gettext "Display some useful debug information")
 
 $(boldify $(gettext "Examples:"))
@@ -81,13 +82,17 @@ install_package() {
 		pre_depends $root
 	fi
 
-	# Resolve package deps.
-	if missing_deps $package_name $DEPENDS; then
+	# Resolve package deps. Disable with: --nodeps
+	if missing_deps $package_name $DEPENDS && [ ! "$nodeps" ]; then
 		if [ "$confirm" ]; then
 			gettext "Install missing dependencies"
 			if ! confirm; then
 				gettext "WARNING: Any dependencies installed"; newline
+			else
+				install_deps $package_name $DEPENDS
 			fi
+		else
+			# Default is to install all missing deps
 			install_deps $package_name $DEPENDS
 		fi
 	else
