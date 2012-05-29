@@ -74,12 +74,6 @@ extra_info() {
 addto_list() {
 	cd $pkgsdir
 
-	# We need ARCH set the get correct version.
-	ARCH=$(fgrep ARCH= /etc/slitaz/cook.conf | cut -d "\"" -f 2)
-	case "$ARCH" in
-		arm|x86_64) arch="-${ARCH}" ;;
-	esac
-
 	echo "$PACKAGE-${VERSION}${EXTRAVERSION}${arch}" >> packages.list
 	$CHECKSUM $(basename $pkg) >> packages.$SUM
 	#
@@ -236,6 +230,11 @@ do
 					mkdir -p $tmpdir
 					extract_receipt $tmpdir $pkg
 					extract_fileslist $tmpdir $pkg
+					# We need ARCH set the get correct version.
+					ARCH=$(fgrep ARCH= /etc/slitaz/cook.conf | cut -d "\"" -f 2)
+					case "$ARCH" in
+						arm|x86_64) arch="-${ARCH}" ;;
+					esac
 					source $tmpdir/receipt
 					addto_list && status
 					unset_receipt
