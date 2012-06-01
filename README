@@ -61,7 +61,7 @@ Coding style
 --------------------------------------------------------------------------------
 Here are the spk coding style notes, follow them if you want your code included
 in the package. These rules are in addition to cookutils coding style, please
-also read cookutils/README
+also read the cookutils/README
 
 
 	* No bash, be Busybox Ash compatible

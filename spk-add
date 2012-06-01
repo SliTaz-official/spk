@@ -24,7 +24,7 @@ $(gettext "Install SliTaz Packages")
 $(boldify $(gettext "Options:"))
   --forced    $(gettext "Force package reinstallation")
   --root=     $(gettext "Set the root file system path")
-  --nodeps    $(gettext "Don't resolv packages dependencies")
+  --nodeps    $(gettext "Don't resolve packages dependencies")
   --debug     $(gettext "Display some useful debug information")
 
 $(boldify $(gettext "Examples:"))
@@ -321,7 +321,7 @@ install_web() {
 			package_full=$(echo $package_full | sed s/.tazpkg/$pkgarch/) ;;
 	esac
 
-	# Let fetch the package by download()
+	# Lets fetch the package by download()
 	[ "$count" == 1 ] && newline
 	debug "spk-add package: $package_name"
 	download "$package_full" $mirror

@@ -143,7 +143,7 @@ check_download() {
 # Download a file trying all mirrors
 # Usage: file [url|path]
 #
-# Priority to extra is done by mirrored_pkg wich try first to find the
+# Priority to extra is done by mirrored_pkg which tries first to find the
 # packages in extra mirror, then on official.
 #
 download() {
@@ -156,7 +156,7 @@ download() {
 	[ "$forced" ] && rm -f $pwd/$file
 	debug "download file: $file"
 	debug "DB: $db"
-	# Local mirror ? End by cd to cache, we may be installind. If --get
+	# Local mirror ? End by cd to cache we may be installed in. If --get
 	# was used we dl/copy in the current dir.
 	if [ -f "$uri/$file" ]; then
 		[ "$verbose" ] && echo "URI: $uri/"
@@ -179,7 +179,7 @@ download() {
 		boldify " $file"
 		[ "$verbose" ] && (gettext "Destination:"; colorize 34 " $pwd")
 		if [ -f "$pwd/$file" ]; then
-			echo "File exist: $pwd/$file" && return 0
+			echo "File exists: $pwd/$file" && return 0
 		fi
 		# TODO: be a spider with wget -s to check if package is on mirror,
 		# if not try all official mirrors ?
@@ -313,7 +313,7 @@ is_elf() {
 	[ "$(dd if=$1 bs=1 skip=1 count=3 2> /dev/null)" = "ELF" ]
 }
 
-# Exec functions directly for developement purpose.
+# Exec functions directly for developement purposes.
 case $1 in
 	*_*) func=$1 && shift && $func $@ ;;
 esac

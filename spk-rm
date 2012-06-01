@@ -34,7 +34,7 @@ EOT
 	exit 0
 }
 
-# Avoid dirname errors by checking for argument anf then remove file and
+# Avoid dirname errors by checking for argument and then remove file and
 # empty directory. Usage: remove_file file
 remove_file() {
 	[ "$1" ] || return
@@ -118,7 +118,7 @@ remove() {
 	# Do we have packages depending on $pkg to remove ?
 	if [ "$altered" ]; then
 		if [ "$confirm" ]; then
-			gettext "Remove packages depending on:"; echo -n " $pkg"
+			gettext "Removing packages depending on:"; echo -n " $pkg"
 			if ! confirm; then
 				gettext "Keeping packages..."; newline
 				newline && continue

@@ -144,7 +144,7 @@ do
 				count=$(($count + 1))
 				continue ;;
 			*\ --log\ *)
-				# Display packges log's
+				# Display package's log
 				if [ -f "$logdir/$pkg/install.log" ]; then
 					count=$(($count + 1))
 					[ "$count" == "1" ] && newline

@@ -9,7 +9,7 @@
 . /usr/lib/slitaz/libspk.sh
 
 # NOTE: I want to use 'extra' mirrors since we can add any extra mirror
-# URL's and not only undigest. See also undigest command - Pankso
+# URLs and not only undigest. See also undigest command - Pankso
 
 #
 # Functions
@@ -189,7 +189,7 @@ do
 			# Extra mirror
 			extra_db
 			if [ -d "$extradb/$db" ]; then
-				gettext "Extra mirror already exist"; newline
+				gettext "Extra mirror already exists"; newline
 				extra_info $db
 			else
 				boldify $(gettext "Enabling: extra mirror")
@@ -230,7 +230,7 @@ do
 					mkdir -p $tmpdir
 					extract_receipt $tmpdir $pkg
 					extract_fileslist $tmpdir $pkg
-					# We need ARCH set the get correct version.
+					# We need ARCH set to get correct version.
 					ARCH=$(fgrep ARCH= /etc/slitaz/cook.conf | cut -d "\"" -f 2)
 					case "$ARCH" in
 						arm|x86_64) arch="-${ARCH}" ;;

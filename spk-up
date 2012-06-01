@@ -22,8 +22,8 @@ $(boldify $(gettext "Usage:")) $name [packages|--options]
 $(gettext "Update packages lists and upgrade the system")
 
 $(boldify $(gettext "Options:"))
-  --list       $(gettext "Recharges the packages lists")
-  --add        $(gettext "Install upgrade automaticaly")
+  --list       $(gettext "Recharge the packages lists")
+  --add        $(gettext "Install upgrades automatically")
   --forced     $(gettext "Force recharging the lists")
   --mirror=    $(gettext "Specify a mirror to check")
 
@@ -35,7 +35,7 @@ EOT
 	exit 0
 }
 
-# Headers fo system or packages update
+# Headers for system or packages update
 up_headers() {
 	newline
 	boldify $(gettext "Package") \
@@ -45,7 +45,7 @@ up_headers() {
 	separator
 }
 
-# Recharges all list from one mirror or all mirrors
+# Recharges all lists from one mirror or all mirrors
 recharge_lists() {
 	newline
 	boldify $(gettext "Updating packages lists")
@@ -104,7 +104,7 @@ priority() {
 
 # Types: blocked, new build or new version
 up_type() {
-	# Jump to next repository if pkg doesn't exists in this one.
+	# Jump to next repository if pkg doesn't exist in this one.
 	grep -q "^$PACKAGE |" $dbdesc || continue
 
 	echo -n "$PACKAGE"
@@ -154,7 +154,7 @@ check_pkgup() {
 			$localdb) reponame=$(gettext "Local") ;;
 			*) reponame=$(gettext "Extra") ;;
 		esac
-		# Overwrite: Local have priority
+		# Overwrite: Local has priority
 		#if [ -d "$localdb" ] && fgrep -q "$sum  $PACKAGE-" $localdb/packages.$SUM; then
 			#reponame=$(gettext "Local")
 		#fi
@@ -280,10 +280,10 @@ if [ "$upnb" -gt 0 ]; then
 		install_up
 	done
 	# List is generated each time and must be cleaned so
-	# tazpkg-notify dont find upgrade anymore.
+	# tazpkg-notify doesn't find upgrades anymore.
 	rm $pkgsup && touch $pkgsup
 	newline
-	gettext "Handeled upgrades:"; colorize 32 " $upnb"
+	gettext "Handled upgrades:"; colorize 32 " $upnb"
 	newline
 fi
 
