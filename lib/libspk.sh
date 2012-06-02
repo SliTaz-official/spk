@@ -62,7 +62,7 @@ read_pkgsdesc() {
 	cat $list | while read package version desc category
 	do
 		if [ "$short" ]; then
-			echo -n "$(colorize 32 "$package")"; indent 28 " $version"
+			colorize 32 "$package"; indent 28 " $version"
 		else
 			newline
 			gettext "Package    :"; colorize 32 " $package"
@@ -245,7 +245,7 @@ full_package() {
 check_installed() {
 	local name="$1"
 	if [ -d "$installed/$name" ]; then
-		echo $(boldify "$name") $(gettext "package is already installed")
+		boldify "$name"; gettext "package is already installed"
 		[ "$forced" ] || rm -rf $tmpdir
 		continue
 	fi
@@ -298,7 +298,7 @@ missing_deps() {
 		fi
 	done
 
-	gettext "Missing dependencies:"; echo " $(colorize 34 "$deps")"
+	gettext "Missing dependencies:"; colorize 34 " $deps"
 
 	# Return true if missing deps
 	[ "$deps" != "0" ]

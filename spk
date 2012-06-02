@@ -66,8 +66,8 @@ case "$1" in
 		gettext "Extra mirrors :"; echo " $extra"
 		count_installed
 		count_mirrored
-		separator
-		newline && exit 0 ;;
+		separator && newline
+		exit 0 ;;
 	activity)
 		# --lines=NB
 		: ${lines=18}
