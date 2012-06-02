@@ -171,7 +171,10 @@ install_package() {
 				# If gawk is installed for example we will never remove Busybox
 				# Use CONFLICTS receipt variable to avoid
 				if [ "$confirm" ]; then
-					echo -n "NOTE: confirm: spk-rm $name ???"; read
+					echo -n "NOTE: confirm: spk-rm $name ???";
+					if ! confirm; then
+						exit 1
+					fi
 				fi
 			done
 		fi
@@ -271,7 +274,7 @@ install_package() {
 # Install .tazpkg packages.
 # Parameters: package_file
 install_local() {
-	package_file="$1"
+	local package_file="$1"
 	#check_valid_tazpkg $package_file
 	if [ -f "$package_file" ]; then
 		if [ $(dirname $package_file) == "." ]; then
@@ -379,7 +382,7 @@ do
 		*.tazpkg|*.spk)
 			count=$(($count + 1))
 			install_local $pkg | log_install $pkg;;
-		*.deb|.rmp)
+		*.deb|.rpm)
 			echo "TODO: spk-convert then install" ;;
 		*.*) gettext "WARNING: Not a valid package:"; echo " $pkg" ;;
 		--*) continue ;;
