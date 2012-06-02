@@ -49,7 +49,7 @@ remove_file() {
 
 # Remove a single package
 remove() {
-	altered=""
+	local altered
 	boldify $(gettext "Removing") $pkg
 	separator
 	[ "$verbose" ] && echo "DB: $installed"
@@ -58,13 +58,13 @@ remove() {
 	for i in $(ls $installed); do
 		[ -f $installed/$i/receipt ] || continue
 		unset_receipt
-		. $installed/$i/receipt
+		source_receipt $installed/$i/receipt
 		case " $DEPENDS " in
 			*\ $pkg\ *) altered="$altered $i" ;;
 		esac
 	done
 	unset_receipt
-	. $installed/$pkg/receipt
+	source_receipt $installed/$pkg/receipt
 
 	if [ "$altered" ]; then
 		gettext "The following packages depend on"; colorize 31 " $pkg"
@@ -75,10 +75,10 @@ remove() {
 
 	# Reverse deps are displayed, confirm uninstall.
 	if [ "$confirm" ]; then
-		gettext "Confirm uninstallation of:"; echo -n " $pkg"
+		echo $(gettext "Confirm uninstallation of:") " $pkg"
 		if ! confirm; then
 			gettext "Uninstallation cancelled"
-			echo -e "\n" && continue
+			newline && continue
 		fi
 	fi
 
@@ -118,7 +118,7 @@ remove() {
 	# Do we have packages depending on $pkg to remove ?
 	if [ "$altered" ]; then
 		if [ "$confirm" ]; then
-			gettext "Removing packages depending on:"; echo -n " $pkg"
+			echo $(gettext "Removing packages depending on:") $pkg
 			if ! confirm; then
 				gettext "Keeping packages..."; newline
 				newline && continue
