@@ -244,7 +244,7 @@ full_package() {
 # Usage: check_installed package
 check_installed() {
 	local name="$1"
-	if [ -d "$installed/$name" ]; then
+	if is_package_installed $name; then
 		echo $(boldify "$name") $(gettext "package is already installed")
 		[ "$forced" ] || rm -rf $tmpdir
 		continue
@@ -258,14 +258,14 @@ equivalent_pkg() {
 		if echo $i | fgrep -q : ; then
 			# format 'alternative:newname'
 			# if alternative is installed then substitute newname
-			if [ -f $installed/${i%:*}/receipt ]; then
+			if is_package_installed ${i%:*}; then
 				# substitute package dependancy
 				echo ${i#*:}
 				return
 			fi
 		else
 			# if alternative is installed then nothing to install
-			if [ -f $installed/$i/receipt ]; then
+			if is_package_installed $i/receipt; then
 				# substitute installed package
 				echo $i
 				return
@@ -292,7 +292,7 @@ missing_deps() {
 		if [ ! -d "$installed/$pkg" ]; then
 			gettext "Missing:"; echo " $pkg"
 			deps=$(($deps+1))
-		elif [ ! -f "$installed/$pkg/receipt" ]; then
+		elif [ ! is_package_installed $pkg/receipt ]; then
 			gettext "WARNING: Dependency loop between:"; newline
 			echo "  $package --> $pkg"
 		fi

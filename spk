@@ -171,7 +171,7 @@ do
 		count=$(($count + 1))
 		[ "$count" == 1 ] && newline
 		unset_receipt
-		. $installed/$pkg/receipt
+		source_receipt $installed/$pkg/receipt
 		boldify $(gettext "Package") $pkg
 		separator
 		gettext "Status     :"; colorize 32 " installed"

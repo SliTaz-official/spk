@@ -56,7 +56,7 @@ remove() {
 
 	# Reverse deps
 	for i in $(ls $installed); do
-		[ -f $installed/$i/receipt ] || continue
+		is_package_installed $i || continue
 		unset_receipt
 		source_receipt $installed/$i/receipt
 		case " $DEPENDS " in
@@ -156,7 +156,7 @@ do
 		--*) continue
 	esac
 	# Be sure package is installed
-	if [ ! -f "$installed/$pkg/receipt" ]; then
+	if ! is_package_installed $pkg; then
 		echo -n "$(boldify $pkg) "
 		gettext "package is not installed"; newline
 		continue

@@ -50,7 +50,7 @@ recharge_lists() {
 	newline
 	boldify $(gettext "Updating packages lists")
 	separator
-	check="$extradb/*/mirror $PKGS_DB/mirror"
+	local check="$extradb/*/mirror $PKGS_DB/mirror"
 	if [ "$mirror" ]; then
 		check=$extradb/$mirror/mirror
 		[ "$mirror" == "main" ] && check=$PKGS_DB/mirror
@@ -133,7 +133,7 @@ up_type() {
 # Check if we have an upgrade for a package
 check_pkgup() {
 	unset_receipt
-	. $pkg/receipt
+	source_receipt $pkg/receipt
 	localdb=$extradb/local
 	sum=$(fgrep "  $PACKAGE-${VERSION}$EXTRAVERSION.tazpkg" \
 		$installed.$SUM | awk '{print $1}')
@@ -196,10 +196,10 @@ do
 			system=no
 			check_root
 			[ "$count" == 0 ] && up_headers
-			if [ -f "$installed/$pkg/receipt" ]; then
+			if is_package_installed $pkg; then
 				count=$(($count +1))
 				cd $installed
-				. $pkg/receipt
+				source_receipt $pkg/receipt
 				check=$(check_pkgup)
 				if [ "$check" != "" ]; then
 					echo "$check"
