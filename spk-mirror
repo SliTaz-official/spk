@@ -43,7 +43,7 @@ EOT
 check_mirror() {
 	for file in packages.list packages.$SUM packages.desc ID
 	do
-		gettext "Checking file:"; echo -n " $file"
+		echo $(gettext "Checking file:") $file
 		if ! wget -q -s -T 6 ${1}${list} 2>/dev/null; then
 			newline
 			gettext "Unable to reach:"; colorize 31 " $file"
