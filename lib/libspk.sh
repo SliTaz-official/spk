@@ -62,7 +62,7 @@ read_pkgsdesc() {
 	cat $list | while read package version desc category
 	do
 		if [ "$short" ]; then
-			colorize 32 "$package"; indent 28 " $version"
+			echo $(colorize 32 "$package") $(indent 28 " $version")
 		else
 			newline
 			gettext "Package    :"; colorize 32 " $package"
@@ -245,7 +245,7 @@ full_package() {
 check_installed() {
 	local name="$1"
 	if [ -d "$installed/$name" ]; then
-		boldify "$name"; gettext "package is already installed"
+		echo $(boldify "$name") $(gettext "package is already installed")
 		[ "$forced" ] || rm -rf $tmpdir
 		continue
 	fi
