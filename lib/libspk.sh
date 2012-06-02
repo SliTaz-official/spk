@@ -292,7 +292,7 @@ missing_deps() {
 		if [ ! -d "$installed/$pkg" ]; then
 			gettext "Missing:"; echo " $pkg"
 			deps=$(($deps+1))
-		elif [ ! is_package_installed $pkg/receipt ]; then
+		elif ! is_package_installed $pkg/receipt; then
 			gettext "WARNING: Dependency loop between:"; newline
 			echo "  $package --> $pkg"
 		fi
