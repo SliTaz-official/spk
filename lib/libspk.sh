@@ -292,7 +292,7 @@ missing_deps() {
 		if [ ! -d "$installed/$pkg" ]; then
 			gettext "Missing:"; echo " $pkg"
 			deps=$(($deps+1))
-		elif ! is_package_installed $pkg/receipt; then
+		elif [ ! -f "$installed/$pkg/receipt" ]; then
 			gettext "WARNING: Dependency loop between:"; newline
 			echo "  $package --> $pkg"
 		fi
@@ -312,8 +312,3 @@ grepesc() {
 is_elf() {
 	[ "$(dd if=$1 bs=1 skip=1 count=3 2> /dev/null)" = "ELF" ]
 }
-
-# Exec functions directly for developement purposes.
-case $1 in
-	*_*) func=$1 && shift && $func $@ ;;
-esac
