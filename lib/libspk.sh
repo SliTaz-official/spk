@@ -92,6 +92,16 @@ extract_fileslist() {
 	cd - >/dev/null
 }
 
+# Extract library.list from tazpkg
+# Parameters: result_dir package_file
+extract_librarylist() {
+	local dir="$1"
+	local file="$2"
+	cd "$dir"
+	{ cpio --quiet -i library.list > /dev/null 2>&1; } < $file
+	cd - >/dev/null
+}
+
 is_package_installed() {
 	[ -f "$installed/$1/receipt" ]
 }
