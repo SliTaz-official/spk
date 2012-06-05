@@ -167,6 +167,10 @@ do
 					newline
 					echo $(boldify $(gettext "Extracting:")) $pkg
 					separator ;;
+			*\ --forced\ *)
+				spk-add --forced $pkg --count=$count
+				count=$(($count + 1))
+				continue ;;
 		esac
 		count=$(($count + 1))
 		[ "$count" == 1 ] && newline
