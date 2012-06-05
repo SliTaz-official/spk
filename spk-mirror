@@ -96,6 +96,11 @@ addto_list() {
 	done
 	# files.list provides a list of all packages files.
 	cat $tmpdir/files.list | sed s/^/"$PACKAGE: \0"/ >> $pkgsdir/files.list
+	# library.list provides a depends of so depend files for the package.
+	if [ -f $tmpdir/library.list ]; then
+		sed "/^$PACKAGE\t/d" -i $pkgsdir/libraries.txt
+		cat $tmpdir/library.list >> $pkgsdir/libraries.txt
+	fi
 	cd - > /dev/null
 }
 
@@ -230,6 +235,7 @@ do
 					mkdir -p $tmpdir
 					extract_receipt $tmpdir $pkg
 					extract_fileslist $tmpdir $pkg
+					extract_librarylist $tmpdir $pkg
 					# We need ARCH set to get correct version.
 					ARCH=$(fgrep ARCH= /etc/slitaz/cook.conf | cut -d "\"" -f 2)
 					case "$ARCH" in
