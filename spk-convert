@@ -331,70 +331,6 @@ convert_arch() {
 	rm -rf $tmpdir
 }
 
-# convert a .tgz package to .tazpkg
-# Usage: convert_tgz $package_file
-convert_tgz() {
-	local package_file=$1
-	local package=$(basename $package_file)
-	
-	# Set package to current args
-	IFS='-'
-	set -- $package
-	unset IFS
-	
-	local PACKAGE=$1
-	local VERSION=$2
-	local file="$tmpdir/$PACKAGE-$VERSION"
-	local receipt="$file/receipt"
-	local fs="$file/fs"
-	
-	# Extract package
-	mkdir -p $fs
-	tar xzf $package_file -C $fs
-	
-	if [ -d $fs/install ]; then
-		# Set other receipt vars
-		SHORT_DESC=$(grep ^$PACKAGE $fs/install/slack-desc | \
-			head -1 | sed 's/.*(\(.*\)).*/\1/')
-		WEB_SITE="http://www.slackware.com/packages/"
-		MAINTAINER="nobody@slitaz.org"
-		
-		DEPENDS=$(find_depends $fs)
-		generate_receipt $receipt $package_file
-	  	
-		show_unresolved_lib $receipt
-		
-		# post_install function from doinst.sh
-		if [ -f $fs/install/doinst.sh ]; then
-			cat >> $receipt <<EOM
-
-post_install()
-{
-chroot \$1/ sh - << EOT
-cd /
-$(cat $fs/install/doinst.sh | sed -e 's/\\/\\\\/g' | sed -e 's/\$/\\$/g')
-EOT
-}
-EOM
-		fi
-		
-		# Get full description
-		if [ ! -z "$SHORT_DESC" ]; then
-			grep ^$PACKAGE $fs/install/slack-desc | \
-			sed "s/^$PACKAGE://" > $file/description.txt
-		fi
-		
-		rm -rf $fs/install
-		
-		pack $PACKAGE $file
-		
-		mv $file.tazpkg .
-	else
-		eval_gettext "\$package_file does not look like a Slackware package !"; newline
-	fi
-	rm -rf $tmpdir
-}
-
 # convert a .deb package to .tazpkg
 # Usage: convert_deb $package_file
 convert_deb() {
@@ -538,8 +474,6 @@ do
 				convert_deb $pkg;;
 			*.rpm)
 				convert_rpm $pkg;;
-			*.tgz)
-				convert_tgz $pkg;;
 			*.apk|*.pkg.tar.gz|*.pkg.tar.xz)
 				convert_arch $pkg;;
 			*.ipk|*.opk)
