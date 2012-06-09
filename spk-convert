@@ -33,7 +33,6 @@ EOT
 	exit 0
 }
 
-# TODO find_depends show_unresolved_lib
 # Move tazpkg pack to shared lib?
 
 # generate a receipt based on standard receipt vars
@@ -50,21 +49,80 @@ CATEGORY="misc"
 SHORT_DESC="$SHORT_DESC"
 WEB_SITE="$WEB_SITE"
 MAINTAINER="$MAINTAINER"
-DEPENDS="$(find_depends)"
+DEPENDS="$DEPENDS"
 CONFIG_FILES="$CONFIG_FILES"
 EOT
 		
 }
+
+# search dependencies for files
+# Usage: find_depends $fs
+find_depends() {
+	local fs=$1
+	
+	local DEFAULT_DEPENDS="glibc-base gcc-lib-base"
+
+	for chkfile in $(find $fs -type f); do
+		is_elf $chkfile || continue
+		case "$chkfile" in
+		*.o|*.ko|*.ko.gz) continue;;
+		esac
+		
+		ldd $chkfile | \
+		while read lib rem; do
+			case "$lib" in
+				statically|linux-gate.so*|ld-*.so|*/ld-*.so)
+					continue;;
+			esac
+			
+			find $fs | grep -q /$lib$ && continue
+			
+			for dep in $(fgrep $lib files.list | cut -d: -f1); do
+				case " $DEFAULT_DEPENDS " in
+					*\ $dep\ *) continue 2;;
+				esac
+				grep -qs "^$dep$" $tmpdir/depends && continue 2
+			done
+			
+			if [ -n "$dep" ]; then
+				echo "$dep" >> $tmpdir/depends
+			else
+				grep -qs ^$lib$ $tmpdir/unresolved ||
+				echo "$lib" >> $tmpdir/unresolved
+			fi
+		done
+	done
+	unset spc
+	local spc
+	for file in $(cat $tmpdir/depends 2> /dev/null | sort | uniq); do
+		echo -n "$spc$file"
+		spc=" "
+	done
+}
+
+show_unresolved_lib() {
+	local receipt=$1
+	if [ -s $tmpdir/unresolved ]; then
+		echo -e "BUGS=\"$(gettext 'No dependency for')" >> $receipt
+		for lib in $(cat $tmpdir/unresolved | sort | uniq); do
+			eval_gettext "WARNING: unknown dependency for \$lib"; newline
+			echo -n " $lib" >> $receipt
+		done
+		echo "\"" >> $receipt
+	fi
+}
+
+
 
 # convert a .ipk package to .tazpkg
 # Usage: convert_ipk $package_file
 convert_ipk() {
 	local package_file=$1
 	
-	mkdir -p $tmp
-	tar xOzf $package_file ./control.tar.gz | tar xzf - -C $tmp
+	mkdir -p $tmpdir
+	tar xOzf $package_file ./control.tar.gz | tar xzf - -C $tmpdir
 
-	local control="$tmp/control"
+	local control="$tmpdir/control"
 	
 	# filter ipk control file for variable
 	# Usage: filter_vars $search_var
@@ -84,15 +142,18 @@ convert_ipk() {
 	case "$target" in
 		i386|all)
 			local file="$PACKAGE-$VERSION"
-			local receipt="$tmp/$file/receipt"
-			local fs="$tmp/$file/fs"
+			local receipt="$tmpdir/$file/receipt"
+			local fs="$tmpdir/$file/fs"
 			
 			mkdir -p $fs
 			tar xOzf $package_file ./data.tar.gz | tar xzf - -C $fs
 			
 			unset CONFIG_FILES
-			[ -s $tmp/conffiles ] && $CONFIG_FILE=$(cat $tmp/conffiles)
+			[ -s $tmpdir/conffiles ] && $CONFIG_FILE=$(cat $tmpdir/conffiles)
 
+
+
+			DEPENDS=$(find_depends $fs)
 			generate_receipt $receipt $package_file
 			
 			show_unresolved_lib $receipt
@@ -109,28 +170,29 @@ $func()
 $(cat $script)
 }
 EOT
+				fi
 			}
 			
 			# read functions into receipt
-			transpose_func pre_install $tmp/preinst
-			transpose_func post_install $tmp/postinst
-			transpose_func pre_remove $tmp/prerm
-			transpose_func post_remove $tmp/postrm
+			transpose_func pre_install $tmpdir/preinst
+			transpose_func post_install $tmpdir/postinst
+			transpose_func pre_remove $tmpdir/prerm
+			transpose_func post_remove $tmpdir/postrm
 			
 			[ -z "$SHORT_DESC" ] || echo $SHORT_DESC > $file/description.txt
 
-			cd $tmp
+			cd $tmpdir
 			tazpkg pack $file			
 			cd - > /dev/null
 			
-			mv $tmp/$file.tazpkg .
+			mv $tmpdir/$file.tazpkg .
 			;;
 		*)
 			gettext "Invalid target: $target (expected i386)"; newline
 		;;
 	esac
 	unset_receipt
-	rm -rf $tmp
+	rm -rf $tmpdir
 }
 
 # convert a .pkg.tar.gz/.apk package to .tazpkg
@@ -139,7 +201,7 @@ convert_arch() {
 	local package_file=$1
 	
 	# Extract
-	local fs="$tmp/fs"
+	local fs="$tmpdir/fs"
 	mkdir -p $fs
 	tar xzf $package_file -C $fs
 	
@@ -159,18 +221,19 @@ convert_arch() {
 		WEB_SITE=$(filter_vars "url")
 		MAINTAINER=$(filter_vars "packager")
 		
-		local file="$tmp/$package-$version"
+		local file="$tmpdir/$package-$version"
 		local receipt="$file/receipt"
 		
+		DEPENDS=$(find_depends $fs)
 		generate_receipt $receipt $package_file
 		
 		mkdir $file
 		mv $fs $file
 		
-		show_unresolved_lib $tmp/$file/receipt
+		show_unresolved_lib $tmpdir/$file/receipt
 		rm -f $file/fs/.[A-Z]*
 		
-		cd $tmp
+		cd $tmpdir
 		tazpkg pack $file
 		cd - > /dev/null
 		
@@ -179,7 +242,7 @@ convert_arch() {
 		eval_gettext "\$package_file does not look like an Archlinux/Alpine package !"; newline
 	fi
 	unset_receipt
-	rm -rf $tmp
+	rm -rf $tmpdir
 }
 
 # convert a .tgz package to .tazpkg
@@ -195,7 +258,7 @@ convert_tgz() {
 	
 	local PACKAGE=$1
 	local VERSION=$2
-	local file="$tmp/$PACKAGE-$VERSION"
+	local file="$tmpdir/$PACKAGE-$VERSION"
 	local receipt="$file/receipt"
 	local fs="$file/fs"
 	
@@ -210,6 +273,7 @@ convert_tgz() {
 		WEB_SITE="http://www.slackware.com/packages/"
 		MAINTAINER="nobody@slitaz.org"
 		
+		DEPENDS=$(find_depends $fs)
 		generate_receipt $receipt $package_file
 	  	
 		show_unresolved_lib $receipt
@@ -226,6 +290,8 @@ $(cat $fs/install/doinst.sh | sed -e 's/\\/\\\\/g' | sed -e 's/\$/\\$/g')
 EOT
 }
 EOM
+		fi
+		
 		# Get full description
 		if [ ! -z "$SHORT_DESC" ]; then
 			grep ^$PACKAGE $fs/install/slack-desc | \
@@ -234,7 +300,7 @@ EOM
 		
 		rm -rf $fs/install
 		
-		cd $tmp
+		cd $tmpdir
 		tazpkg pack $file
 		cd - /dev/null
 		
@@ -242,24 +308,24 @@ EOM
 	else
 		eval_gettext "\$package_file does not look like a Slackware package !"; newline
 	fi
-	rm -rf $tmp
+	rm -rf $tmpdir
 }
 
 # convert a .deb package to .tazpkg
 # Usage: convert_deb $package_file
 convert_deb() {
-	local $package_file=$1
+	local $package_file="$1"
 	
 	# Extract deb control
-	mkdir -p $tmp
-	dpkg-deb -e $package_file $tmp
+	mkdir -p $tmpdir
+	dpkg-deb -e $package_file $tmpdir
 	
 	
 	# filter control file for variable
 	# Usage: filter_vars $search_var
 	filter_vars() {
 		local var=$1
-		local result=$(grep '^ *$var:' $tmp/control)
+		local result=$(grep '^ *$var:' $tmpdir/control)
 		echo ${result##*:}
 	}
 	
@@ -268,11 +334,11 @@ convert_deb() {
 	SHORT_DESC=$(filter_vars "Description")
 	WEB_SITE="http://packages.debian.org/search?keywords=$PACKAGE"
 	MAINTAINER="nobody@slitaz.org"
-	target="$(grep ^Architecture $tmp/control | sed 's/.*: //')"
+	target="$(grep ^Architecture $tmpdir/control | sed 's/.*: //')"
 	
 	case "$target" in
 	i386|all)
-		local file="$tmp/$PACKAGE-$VERSION"
+		local file="$tmpdir/$PACKAGE-$VERSION"
 		local receipt="$file/receipt"
 		local fs="$file/fs"
 		
@@ -280,13 +346,12 @@ convert_deb() {
 		mkdir -p $fs
 		dpkg-deb -x $package_file $fs
 		
+		DEPENDS=$(find_depends $fs)
 		generate_receipt $receipt $package_file
-		
-		cd $TMP_DIR
-		
-		if [ -s $tmp/conffiles ]; then
+				
+		if [ -s $tmpdir/conffiles ]; then
 		 	cat >> $receipt <<EOT
-CONFIG_FILES="$(cat $tmp/conffiles)"
+CONFIG_FILES="$(cat $tmpdir/conffiles)"
 EOT
 		fi
 		
@@ -295,7 +360,7 @@ EOT
 		# Description.txt
 		[ -z "$SHORT_DESC" ] || echo "$SHORT_DESC" > $file/Description.txt
 		
-		cd $tmp
+		cd $tmpdir
 		tazpkg pack $file
 		cd - > /dev/null
 		
@@ -305,7 +370,7 @@ EOT
 		gettext "Invalid target: $target (expected i386 or all)"; newline
 		;;
 	esac
-	rm -rf $tmp
+	rm -rf $tmpdir
 }
 
 # convert a .rpm package to .tazpkg
@@ -314,9 +379,9 @@ convert_rpm() {
 	local package_file=$1
 	
 	# Move package_file to tmp
-	mkdir -p $tmp
-	cp $package_file $tmp
-	package_file=$TMP_DIR/$(basename $package_file)
+	mkdir -p $tmpdir
+	cp $package_file $tmpdir
+	package_file=$tmpdir/$(basename $package_file)
 	
 	# filter package_file for variable
 	# Usage: filter_vars $search_var
@@ -329,40 +394,42 @@ convert_rpm() {
 	VERSION=$(filter_vars "Version")
 	SHORT_DESC=$(filter_vars "Summary")
 	WEB_SITE=$(filter_vars "URL")
-	if [ -z "$URL" ]; then
+	if [ -z "$WEB_SITE" ]; then
 		WEB_SITE="http://rpmfind.net/linux/rpm2html/search.php?query=$PACKAGE"
 	fi
 	CATEGORY="misc";
 	MAINTAINER="nobody@slitaz.org";
 	
 	
-	local file="$tmp/$PACKAGE-$VERSION"
+	local file="$tmpdir/$PACKAGE-$VERSION"
 	local receipt="$file/receipt"
 	local fs="$file/fs"
 	
 	mkdir -p $fs
 	
-	generate_receipt $receipt $package_file
-	
-	rpm -qip $PACKAGE_FILE | \
+	rpm -qip $package_file | \
 		grep "^Description*" -A 100 | \
 		grep -v "^Description*" > \
 		$file/description.txt
 	
 	cd $fs
-	rpm2cpio $PACKAGE_FILE | cpio -idm --quiet
+	rpm2cpio $package_file | cpio -idm --quiet
 	cd - > /dev/null
+	
+	
+	DEPENDS=$(find_depends $fs)
+	generate_receipt $receipt $package_file
 	
 	show_unresolved_lib $receipt
 	
-	cd $tmp
+	cd $tmpdir
 	tazpkg pack $file
 	cd -
 	
 	mv $file.tazpkg .
 		
 	unset_receipt
-	rm -rf $TMP_DIR
+	rm -rf $tmpdir
 }
 
 
