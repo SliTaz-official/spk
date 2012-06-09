@@ -75,20 +75,25 @@ pack() {
 		
 		# Create files.list with redirecting find outpout.
 		gettext "Creating the list of files..."
-		find $fs -type f -print > $dir/files.list
-		find $fs -type l -print >> $dir/files.list
-		
+		cd $fs
+		find . -type f -print > $dir/files.list
+		find . -type l -print >> $dir/files.list
+		sed -i s/'^.'/''/ $dir/files.list
+		cd - /dev/null
+				
 		status
 		gettext "Creating $CHECKSUM of files..."
 		local file
+		cd $fs
 		for file in $(cat $dir/files.list); do
-			[ -L "$fs$file" ] && continue
-			[ -f "$fs$file" ] || continue
+			[ -L "$file" ] && continue
+			[ -f "$file" ] || continue
 			case "$file" in
 				/lib/modules/*/modules.*|*.pyc) continue;;
 			esac
-			$CHECKSUM "$fs$file" | sed 's/  fs/  /' >> $dir/$CHECKSUM
+			$CHECKSUM "$file" | sed 's/  fs/  /' >> $dir/$CHECKSUM
 		done
+		cd - /dev/null
 		
 		status
 		UNPACKED_SIZE=$(du -chs $fs $receipt $dir/files.list $dir/$CHECKSUM \
@@ -97,7 +102,9 @@ pack() {
 		
 		# Build cpio archives.
 		gettext "Compressing the fs... "
-		find $fs | cpio -o -H newc --quiet | lzma e $fs.cpio.lzma -si
+		cd $dir
+		find fs | cpio -o -H newc --quiet | lzma e $fs.cpio.lzma -si
+		cd - /dev/null
 		rm -rf $fs
 		status
 		
@@ -112,7 +119,9 @@ pack() {
 		status
 		
 		gettext "Creating full cpio archive... "
-		find $dir -print | cpio -o -H newc --quiet > $dir.tazpkg
+		cd $dir
+		find . -print | cpio -o -H newc --quiet > $dir.tazpkg
+		cd - /dev/null
 		status
 		
 		gettext "Restoring original package tree... "
