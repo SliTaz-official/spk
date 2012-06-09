@@ -285,7 +285,13 @@ convert_arch() {
 	# Extract
 	local fs="$tmpdir/fs"
 	mkdir -p $fs
-	tar xzf $package_file -C $fs
+	
+	case $package_file in
+		*.apk|*.pkg.tar.gz)
+			tar xzf $package_file -C $fs;;
+		*.pkg.tar.xz)
+			tar xf $package_file -C $fs;;
+	esac
 	
 	local PKGINFO="$fs/.PKGINFO"
 	if [ -f $PKGINFO ]; then
@@ -303,14 +309,14 @@ convert_arch() {
 		WEB_SITE=$(filter_vars "url")
 		MAINTAINER=$(filter_vars "packager")
 		
-		local file="$tmpdir/$package-$version"
+		local file="$tmpdir/$PACKAGE-$VERSION"
 		local receipt="$file/receipt"
-		
-		DEPENDS=$(find_depends $fs)
-		generate_receipt $receipt $package_file
 		
 		mkdir $file
 		mv $fs $file
+		
+		DEPENDS=$(find_depends $fs)
+		generate_receipt $receipt $package_file
 		
 		show_unresolved_lib $tmpdir/$file/receipt
 		rm -f $file/fs/.[A-Z]*
@@ -534,7 +540,7 @@ do
 				convert_rpm $pkg;;
 			*.tgz)
 				convert_tgz $pkg;;
-			*.apk|*.pkg.tar.gz)
+			*.apk|*.pkg.tar.gz|*.pkg.tar.xz)
 				convert_arch $pkg;;
 			*.ipk|*.opk)
 				convert_ipk $pkg;;
