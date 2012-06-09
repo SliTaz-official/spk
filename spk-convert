@@ -392,7 +392,7 @@ EOM
 # convert a .deb package to .tazpkg
 # Usage: convert_deb $package_file
 convert_deb() {
-	local $package_file="$1"
+	local package_file="$1"
 	
 	# Extract deb control
 	mkdir -p $tmpdir
@@ -403,7 +403,7 @@ convert_deb() {
 	# Usage: filter_vars $search_var
 	filter_vars() {
 		local var=$1
-		local result=$(grep '^ *$var:' $tmpdir/control)
+		local result=$(grep "^ *$var:" $tmpdir/control)
 		echo ${result##*:}
 	}
 	
@@ -436,7 +436,7 @@ EOT
 		show_unresolved_lib $file/receipt
 		
 		# Description.txt
-		[ -z "$SHORT_DESC" ] || echo "$SHORT_DESC" > $file/Description.txt
+		[ -z "$SHORT_DESC" ] || echo "$SHORT_DESC" > $file/description.txt
 		
 		pack $PACKAGE $file
 		
