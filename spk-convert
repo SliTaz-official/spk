@@ -55,6 +55,81 @@ EOT
 		
 }
 
+# Create SliTaz package archive using cpio and lzma.
+# TODO: Cook also pack packages, we should share code in libpkg.sh
+# Usage: pack $package
+pack() {
+	local package=$1
+	local dir="$2"
+	local fs="$dir/fs"
+	local receipt="$dir/receipt"
+	
+	if [ ! -f "$receipt" ]; then
+			gettext "Receipt is missing. Please read the documentation."; newline
+			exit 0
+	else
+#		cd $dir
+		newline
+		echo $(boldify "Packing :") $package
+		separator
+		
+		# Create files.list with redirecting find outpout.
+		gettext "Creating the list of files..."
+		find $fs -type f -print > $dir/files.list
+		find $fs -type l -print >> $dir/files.list
+		
+		status
+		gettext "Creating $CHECKSUM of files..."
+		local file
+		for file in $(cat $dir/files.list); do
+			[ -L "$fs$file" ] && continue
+			[ -f "$fs$file" ] || continue
+			case "$file" in
+				/lib/modules/*/modules.*|*.pyc) continue;;
+			esac
+			$CHECKSUM "$fs$file" | sed 's/  fs/  /' >> $dir/$CHECKSUM
+		done
+		
+		status
+		UNPACKED_SIZE=$(du -chs $fs $receipt $dir/files.list $dir/$CHECKSUM \
+				$dir/description.txt 2> /dev/null | \
+				awk '{ sz=$1 } END { print sz }')
+		
+		# Build cpio archives.
+		gettext "Compressing the fs... "
+		find $fs | cpio -o -H newc --quiet | lzma e $fs.cpio.lzma -si
+		rm -rf $fs
+		status
+		
+		PACKED_SIZE=$(du -chs $fs.cpio.lzma $receipt $dir/files.list \
+				$dir/$CHECKSUM $dir/description.txt 2> /dev/null | \
+				awk '{ sz=$1 } END { print sz }')
+		
+		gettext "Updating receipt sizes..."
+		sed -i s/^PACKED_SIZE.*$// $receipt
+		sed -i s/^UNPACKED_SIZE.*$// $receipt
+		sed -i "s/^PACKAGE=/PACKED_SIZE=\"$PACKED_SIZE\"\nUNPACKED_SIZE=\"$UNPACKED_SIZE\"\nPACKAGE=/" $receipt
+		status
+		
+		gettext "Creating full cpio archive... "
+		find $dir -print | cpio -o -H newc --quiet > $dir.tazpkg
+		status
+		
+		gettext "Restoring original package tree... "
+		
+		unlzma -c $fs.cpio.lzma | cpio -idm --quiet $dir
+		status
+		
+		rm $fs.cpio.lzma
+		separator
+		eval_gettext "Package \$package compressed successfully."; newline
+		echo $(gettext "Size") : $(du -sh $dir.tazpkg)
+		newline
+	fi
+}
+
+
+
 # search dependencies for files
 # Usage: find_depends $fs
 find_depends() {
@@ -181,9 +256,7 @@ EOT
 			
 			[ -z "$SHORT_DESC" ] || echo $SHORT_DESC > $file/description.txt
 
-			cd $tmpdir
-			tazpkg pack $file			
-			cd - > /dev/null
+			pack $PACKAGE $file
 			
 			mv $tmpdir/$file.tazpkg .
 			;;
@@ -233,9 +306,7 @@ convert_arch() {
 		show_unresolved_lib $tmpdir/$file/receipt
 		rm -f $file/fs/.[A-Z]*
 		
-		cd $tmpdir
-		tazpkg pack $file
-		cd - > /dev/null
+		pack $PACKAGE $file
 		
 		mv $file.tazpkg .
 	else
@@ -300,9 +371,7 @@ EOM
 		
 		rm -rf $fs/install
 		
-		cd $tmpdir
-		tazpkg pack $file
-		cd - /dev/null
+		pack $PACKAGE $file
 		
 		mv $file.tazpkg .
 	else
@@ -360,9 +429,7 @@ EOT
 		# Description.txt
 		[ -z "$SHORT_DESC" ] || echo "$SHORT_DESC" > $file/Description.txt
 		
-		cd $tmpdir
-		tazpkg pack $file
-		cd - > /dev/null
+		pack $PACKAGE $file
 		
 		mv $file.tazpkg .
 		;;
@@ -422,9 +489,7 @@ convert_rpm() {
 	
 	show_unresolved_lib $receipt
 	
-	cd $tmpdir
-	tazpkg pack $file
-	cd -
+	pack $PACKAGE $file
 	
 	mv $file.tazpkg .
 		
