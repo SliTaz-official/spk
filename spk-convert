@@ -225,9 +225,9 @@ convert_ipk() {
 	target=$(filter_vars "Architecture")
 	case "$target" in
 		i386|all)
-			local file="$PACKAGE-$VERSION"
-			local receipt="$tmpdir/$file/receipt"
-			local fs="$tmpdir/$file/fs"
+			local file="$tmpdir/$PACKAGE-$VERSION"
+			local receipt="$file/receipt"
+			local fs="$file/fs"
 			
 			mkdir -p $fs
 			tar xOzf $package_file ./data.tar.gz | tar xzf - -C $fs
@@ -267,7 +267,7 @@ EOT
 
 			pack $PACKAGE $file
 			
-			mv $tmpdir/$file.tazpkg .
+			mv $file.tazpkg .
 			;;
 		*)
 			gettext "Invalid target: $target (expected i386)"; newline
