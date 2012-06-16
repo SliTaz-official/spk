@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Spk-convert - Convert other distrobution's packages to tazpkg form. Read the README before adding or
+# Spk-convert - Convert other distribution's packages to tazpkg form. Read the README before adding or
 # modifing any code in spk!
 #
 # Copyright (C) SliTaz GNU/Linux - BSD License
@@ -22,7 +22,7 @@ $(boldify $(gettext "Usage:")) $name [packages|--options]
 $(gettext "Convert SliTaz Packages")
 
 $(boldify $(gettext "Options:"))
-  --install    $(gettext "Install package after conversion")
+  --install   $(gettext "Install package after conversion")
   --root=     $(gettext "Set the root file system path")
   --debug     $(gettext "Display some useful debug information")
 
@@ -56,7 +56,7 @@ EOT
 }
 
 # Create SliTaz package archive using cpio and lzma.
-# TODO: Cook also pack packages, we should share code in libpkg.sh
+# TODO: Cook also packs packages, we should share code in libpkg.sh
 # Usage: pack $package
 pack() {
 	local package=$1
