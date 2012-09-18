@@ -127,7 +127,7 @@ do
 				separator
 				cat $installed/$pkg/files.list
 				separator
-				echo -n $(gettext "Installed files by") $pkg:
+				gettext "Installed files by"; echo -n " $pkg: "
 				colorize 32 "$nb" && newline
 			done
 			exit 0 ;;
