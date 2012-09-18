@@ -226,7 +226,9 @@ install_package() {
 			if [ "$verbose" ]; then
 				gettext "Removing:"; echo " ${root}${file}"
 			fi
-			remove_with_path ${root}${file}
+			#remove_file ${root}${file}
+			rm -f ${root}${file} 2>/dev/null
+			rmdir ${root}${file} 2> /dev/null
 		done
 		status
 	fi
