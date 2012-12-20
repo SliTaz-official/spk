@@ -322,3 +322,16 @@ grepesc() {
 is_elf() {
 	[ "$(dd if=$1 bs=1 skip=1 count=3 2> /dev/null)" = "ELF" ]
 }
+
+# Avoid dirname errors by checking for argument and then remove file and
+# empty directory. Usage: remove_file file
+remove_file() {
+	[ "$1" ] || return
+	local dir
+	rm -f $1 2>/dev/null
+	dir="$1"
+	while [ "$dir" != "/" ]; do
+		dir="$(dirname $dir)"
+		rmdir $dir 2> /dev/null || break
+	done
+}
