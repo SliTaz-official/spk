@@ -114,7 +114,7 @@ install_package() {
 	[ "$verbose" ] && status
 
 	# Remove receipt that will be overwritten by extraction
-	rm $tmpdir/receipt
+	[ -f $tmpdir/receipt ] && rm $tmpdir/receipt
 
 	# Extract Package
 	#debug "extract_package $package_file $tmpdir"
