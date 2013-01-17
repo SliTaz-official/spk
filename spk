@@ -13,6 +13,8 @@
 # Functions
 #
 
+VERSION=1.0
+
 # Help and usage
 usage() {
 	name=$(basename $0)
@@ -20,7 +22,7 @@ usage() {
 
 $(boldify $(gettext "Usage:")) $name [packages|--options]
 
-$(gettext "SliTaz Packages toolset")
+$(gettext "SliTaz Packages toolset v$VERSION")
 
 $(boldify $(gettext "Commands:"))
   info        $(gettext "Display path, mirror and other stats")
