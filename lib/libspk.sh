@@ -162,7 +162,6 @@ download() {
 	local pwd=$(pwd)
 	[ "$quiet" ] && local quiet="-q"
 	[ "$cache" ] && local pwd=$CACHE_DIR
-	[ "$get" ] || local pwd=$CACHE_DIR
 	[ "$forced" ] && rm -f $pwd/$file
 	debug "download file: $file"
 	debug "DB: $db"
@@ -197,8 +196,8 @@ download() {
 		cd $CACHE_DIR && check_download
 	fi
 	# Be sure the file was fetched.
-	if [ ! -f "$pwd/$file" ] || [ ! -f "$CACHE_DIR/$file" ]; then
-		gettext "ERROR: Missing file:"; colorize 31 " $file"
+	if [ ! -f "$CACHE_DIR/$file" ] && [ ! -f "$pwd/$file" ]; then
+		gettext "ERROR: Missing file:"; colorize 31 " $CACHE_DIR/$file"
 		newline && exit 1
 	fi
 }

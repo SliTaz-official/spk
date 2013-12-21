@@ -112,6 +112,11 @@ do
 			count=$(($count + 1))
 			download $package_full $mirror
 			unset_mirrored
+			if [ ! "$cache" ]; then
+				gettext "Moving package to current directory..."
+				mv -f "$CACHE_DIR/$package_full" .
+				status
+			fi
 			newline && continue ;;
 	esac
 	# Installed ?
