@@ -193,7 +193,7 @@ download() {
 		fi
 		# TODO: be a spider with wget -s to check if package is on mirror,
 		# if not try all official mirrors ?
-		wget $quiet -c $uri/$file -O $CACHE_DIR/$file
+		busybox wget $quiet -c $uri/$file -O $CACHE_DIR/$file
 		cd $CACHE_DIR && check_download
 	fi
 	# Be sure the file was fetched.
