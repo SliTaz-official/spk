@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Spk Documentation</title>
+	<link rel="stylesheet" type="text/css" href="../slitaz-doc.css" />
+	<script type="text/javascript" src="../slitaz-doc.js"></script>
+</head>
+<body>
+
+<header>
+	<h1>Spk Documentation</h1>
+</header>
+
+<!-- Start content -->
+<div id="content">
+
+<h2>SliTaz Packages Toolset</h2>
+
+<p>
+	Small alternative to TazPKG. Spk consite in small separate programm
+	for easier code maintainance and use and shared library. Spk can handle
+	multiple packages on cmdline as well as managing your own mirror.
+</p>
+
+<h3>Usage</h3>
+<p>
+	All spk tools provides a small built-in help usage that you can display 
+	with the command 'usage'. It also has some options to perform special 
+	tasks on a package before executing a task or afterwards. To get help 
+	and usage:
+</p>
+<pre>
+# spk usage
+# spk-add usage
+</pre>
+
+<h3>Packages info</h3>
+<p>
+	To get packages status and information:
+</p>
+<pre>
+# spk busybox glib
+</pre>
+
+<h3>Add packages</h3>
+<p>
+	Spk will handle dependencies. To install new packages simply use
+	'spk-add' or the --add option:
+</p>
+<pre>
+# spk-add package1 package2
+# spk package --add
+</pre>
+
+<h3>Remove packages</h3>
+<p>
+	To remove packages simply:
+</p>
+<pre>
+# spk-rm package1 package2 ...
+</pre>
+
+<h3>Packages update</h3>
+<p>
+	To get the last list of packages and update your system you have
+	to use 'spk-up'. Befor installing anything Spk will ask confirmation.
+	Spk let you upgrade the full system at once (skipping blocked packages)
+	or you can also upgrade packages individualy:
+</p>
+<pre>
+# spk-up
+# spk-up package1 package2 ...
+</pre>
+
+<!-- <h3></h3>
+<p>
+	
+</p>
+<pre>
+# 
+</pre> -->
+
+
+<!-- End content -->
+</div>
+
+<footer>
+	Copyright © 2014 <a href="http://www.slitaz.org/">SliTaz GNU/Linux</a>
+</footer>
+
+</body>
+</html>

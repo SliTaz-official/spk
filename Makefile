@@ -35,11 +35,17 @@ install-msg: msgfmt
 install-lib:
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/lib/slitaz
 	install -m 0755 lib/libspk.sh $(DESTDIR)$(PREFIX)/lib/slitaz
+	
+install-doc:
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/spk
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/applications
+	install -m 0644 data/spk-doc.desktop $(DESTDIR)$(PREFIX)/share/applications
+	install -m 0644 doc/spk.*.html $(DESTDIR)$(PREFIX)/share/doc/spk
+	cp -a doc/spk.html $(DESTDIR)$(PREFIX)/share/doc/spk
 
-install: install-lib
+install: install-lib install-doc
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/sbin
-	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/doc/spk
 	install -m 0755 spk $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 spk-ls $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 spk-rm $(DESTDIR)$(PREFIX)/sbin

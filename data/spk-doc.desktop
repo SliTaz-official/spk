@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=SliTaz Packages Doc
+Exec=browser file:///usr/share/doc/spk/spk.html
+Icon=slitaz-doc
+Categories=Documentation;

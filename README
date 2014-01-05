@@ -44,7 +44,7 @@ Some random and useful notes.
 
 	* packages.desc format: package | 1.0 | desc | category | website
 	* packages.md5 format : de9f76250657000958ee0120d376613e  package-1.0.tazpkg
-	* log package/install.log and package/up.log ti keep trace
+	* log package/install.log and package/up.log to keep trace
 	* ...
 
 Since we use latest libtaz.sh, slitaz.conf and libpkg.sh code you must install
