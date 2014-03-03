@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Spk-convert - Convert other distribution's packages to tazpkg form. Read the README before adding or
-# modifing any code in spk!
+# modifying any code in spk!
 #
 # Copyright (C) SliTaz GNU/Linux - BSD License
 # Author: See AUTHORS files
@@ -73,7 +73,7 @@ pack() {
 		echo $(boldify "Packing :") $package
 		separator
 		
-		# Create files.list with redirecting find outpout.
+		# Create files.list with redirecting find output.
 		gettext "Creating the list of files..."
 		cd $fs
 		find . -type f -print > $dir/files.list

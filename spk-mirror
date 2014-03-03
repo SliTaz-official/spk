@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Spk-mirror - Handle SliTaz packages mirrors. Read the README before
-# adding or modifing any code in spk!
+# adding or modifying any code in spk!
 #
 # Copyright (C) SliTaz GNU/Linux - BSD License
 # Author: See AUTHORS files

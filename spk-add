@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Spk-add - Install SliTaz packages. Read the README before adding or
-# modifing any code in spk!
+# modifying any code in spk!
 #
 # Copyright (C) SliTaz GNU/Linux - BSD License
 # Author: See AUTHORS files

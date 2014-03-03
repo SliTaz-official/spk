@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Libspk - The Spk base function and internal variables used by almost all
-# spk-tools. Read the README before adding or modifing any code in spk!
+# spk-tools. Read the README before adding or modifying any code in spk!
 #
 # Copyright (C) SliTaz GNU/Linux - BSD License
 # Author: See AUTHORS files
@@ -231,13 +231,13 @@ extract_package() {
 	cd - > /dev/null
 }
 
-# Unser var set by mirrored_pkg
+# Unset var set by mirrored_pkg
 unset_mirrored() {
 	unset mirrored mirror db pwd
 }
 
 # Return the full package name, search in all packages.desc and break when
-# first occurance is found: Usage: full_package pkgname
+# first occurrence is found: Usage: full_package pkgname
 full_package() {
 	for desc in $(find $extradb $pkgsdesc -name packages.desc); do
 		local line="$(grep "^$1 |" $desc)"
@@ -268,7 +268,7 @@ equivalent_pkg() {
 			# format 'alternative:newname'
 			# if alternative is installed then substitute newname
 			if is_package_installed ${i%:*}; then
-				# substitute package dependancy
+				# substitute package dependency
 				echo ${i#*:}
 				return
 			fi
