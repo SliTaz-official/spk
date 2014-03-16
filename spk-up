@@ -135,8 +135,13 @@ check_pkgup() {
 	unset_receipt
 	source_receipt $pkg/receipt
 	localdb=$extradb/local
-	sum=$(fgrep "  $PACKAGE-${VERSION}$EXTRAVERSION.tazpkg" \
-		$installed.$SUM | awk '{print $1}')
+	case "$SLITAZ_ARCH" in
+		arm*|x86_64) 
+			pkgfile="$PACKAGE-${VERSION}$EXTRAVERSION-$SLITAZ_ARCH.tazpkg" ;;
+		*) 
+			pkgfile="$PACKAGE-${VERSION}$EXTRAVERSION.tazpkg" ;;
+	esac
+	sum=$(fgrep "  $pkgfile" $installed.$SUM | awk '{print $1}')
 
 	# Skip up-to-date local packages
 	if [ -d "$localdb" ] && fgrep -q "$sum  $PACKAGE-" $localdb/packages.$SUM; then
