@@ -136,10 +136,13 @@ mirrored_pkg() {
 # Check if the download was sane
 check_download() {
 	debug "check_download: $file"
-	if ! tail -c 2k $file | fgrep -q 00000000TRAILER; then
-		gettext "Continuing download of:"; echo " $file"
-		download "$file" $mirror
-	fi
+
+	# Buggy on ARM: continuing download in loop
+	#if ! tail -c 2k $file | fgrep -q 00000000TRAILER; then
+	#	gettext "Continuing download of:"; echo " $file"
+	#	download "$file" $mirror
+	#fi
+
 	# Check that the package has the correct checksum
 	local msum=$(fgrep "  $package_full" $pkgsmd5)
 	local sum=$($CHECKSUM $file)
