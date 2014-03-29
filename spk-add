@@ -383,7 +383,7 @@ do
 	case "$pkg" in
 		*.tazpkg|*.spk)
 			count=$(($count + 1))
-			install_local $pkg | log_install $pkg;;
+			install_local $pkg | log_install $pkg ;;
 		*.deb|.rpm)
 			echo "TODO: spk-convert then install" ;;
 		*.*) gettext "WARNING: Not a valid package:"; echo " $pkg" ;;
@@ -391,7 +391,7 @@ do
 		*)
 			[ "$forced" ] || check_installed $pkg
 			count=$(($count + 1))
-			install_web $pkg | log_install $pkg;;
+			install_web $pkg | log_install $pkg ;;
 	esac
 done
 

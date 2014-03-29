@@ -68,7 +68,7 @@ do
 					boldify $(gettext "Extra mirror")
 					if [ ! -f "$extra/packages.desc" ]; then
 						echo "URL: $(cat $extra/mirror)"
-						gettext "Missing:"; colorize 31" packages.desc"
+						gettext "Missing:"; colorize 31 " packages.desc"
 						continue
 					fi
 					separator

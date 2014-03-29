@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# Spk-find - Find/search SliTaz packages and files. Read the README before
+# adding or modifying any code in spk!
+#
+# Copyright (C) SliTaz GNU/Linux - BSD License
+# Author: See AUTHORS files
+#
+. /usr/lib/slitaz/libspk.sh
+
+#
+# Quick cooded tool to have a simple find/search packages tool for people 
+# using spk toolkit. TODO: find files, find in pkg desc for patern, display
+# status (installed or not).
+#
+
+find="$1"
+count="/tmp/spk/count"
+mkdir -p $(dirname $count)
+
+#
+# Functions
+#
+
+# Help and usage
+usage() {
+	name=$(basename $0)
+	cat << EOT
+
+$(boldify $(gettext "Usage:")) $name [package]
+
+EOT
+	exit 0
+}
+
+case "$1" in
+	*help|usage) usage && exit 0 ;;
+esac
+
+newline
+boldify $(gettext "Spk find: $find")
+separator
+IFS="|"
+grep "$find" $pkgsdesc | while read pkg vers desc null
+do
+	echo "$pkg" >> $count
+	echo -n "$pkg"; indent 16 "$desc"
+done
+unset IFS
+separator
+boldify "Packages found: $(cat $count | wc -l)" && newline
+rm -rf $count
+exit 0
