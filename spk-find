@@ -9,8 +9,8 @@
 . /usr/lib/slitaz/libspk.sh
 
 #
-# Quick cooded tool to have a simple find/search packages tool for people 
-# using spk toolkit. TODO: find files, find in pkg desc for patern, display
+# Quick coded tool to have a simple find/search packages tool for people 
+# using spk toolkit. TODO: find files, find in pkg desc for pattern, display
 # status (installed or not).
 #
 
