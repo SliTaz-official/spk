@@ -40,6 +40,7 @@ esac
 newline
 boldify $(gettext "Spk find: $find")
 separator
+
 IFS="|"
 grep "$find" $pkgsdesc | while read pkg vers desc null
 do
@@ -47,7 +48,15 @@ do
 	echo -n "$pkg"; indent 16 "$desc"
 done
 unset IFS
+
+if [ -f "$count" ]; then
+	count=$(cat $count | wc -l)
+	color=32
+else
+	count=0
+	color=31
+fi
 separator
-boldify "Packages found: $(cat $count | wc -l)" && newline
+boldify "Packages found: $(colorize $color $count)" && newline
 rm -rf $count
 exit 0
