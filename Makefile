@@ -49,6 +49,7 @@ install: install-lib install-doc
 	install -m 0755 spk $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 spk-ls $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 spk-find $(DESTDIR)$(PREFIX)/bin
+	install -m 0755 spk-dialog $(DESTDIR)$(PREFIX)/sbin
 	install -m 0755 spk-rm $(DESTDIR)$(PREFIX)/sbin
 	install -m 0755 spk-add $(DESTDIR)$(PREFIX)/sbin
 	install -m 0755 spk-mirror $(DESTDIR)$(PREFIX)/sbin

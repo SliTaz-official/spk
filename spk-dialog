@@ -1,0 +1,129 @@
+#!/bin/sh
+#
+# Spk-dialog - SliTaz Packages toolset Ncurses GUI.
+#
+# Copyright (C) 2014 SliTaz GNU/Linux - BSD License
+# Author: See AUTHORS files
+#
+. /usr/lib/slitaz/libspk.sh
+check_root
+
+title="{ Spk }"
+oklab="Spk dialog"
+tmpdir="/tmp/spk-dialog"
+tmp="$tmpdir/$$"
+height="20"
+width="72"
+
+# Use a tmp directory
+mkdir -p ${tmpdir}
+
+# Small built-in help
+help() {
+	cat << EOT
+
+$(boldify "$(gettext 'Usage:')") $(basename $0)
+
+EOT
+}
+
+spk_read() {
+	gettext "Press ENTER to go back to Spk dialog"; read
+}
+
+#
+# GUI Functions. Some in --> /usr/lib/slitaz/libdialog.sh ???
+#
+
+# Usage: msg_box "title" "message"
+msg_box() {
+	dialog --title "{ $1 }" --cr-wrap \
+		--ok-label "$oklab" --msgbox "\n$2" ${height} ${width}
+}
+
+# Usage: text_box "file"
+text_box() {
+	local file="$1"
+	if [ -f "$file" ]; then
+		dialog --cr-wrap \
+			--title " $(gettext 'Viewing file:') $file " \
+			--extra-button \
+			--extra-label "Edit file" \
+			--ok-label "$oklab" \
+			--textbox ${file} ${height} ${width}
+	else
+		dialog --title "$title" \
+			--msgbox "\nERROR: $file does not exist" 10 ${width}
+	fi
+	# Handle options
+	case "$?" in
+		3) editor ${file} ;;
+	esac
+}
+
+# Packages info and spk-up button
+spk_info_box() {
+	out="$tmpdir/spk-info.txt"
+	spk info --output=raw > ${out}
+	dialog --cr-wrap \
+		--title "{ Spk Info }" \
+		--exit-label "$oklab" \
+		--textbox "$out" ${height} ${width}
+}
+
+# Main Dialog menu
+main_box() {
+	dialog \
+		--clear \
+		--title "$title" \
+		--ok-label "Exec" \
+		--cancel-label "Quit" \
+		--menu "" ${height} ${width} 14 \
+"info"         "$(gettext 'Packages information')" \
+"list"         "$(gettext 'List installed packages')" \
+"upgrade"      "$(gettext 'Upgrade installed packages')" \
+"clean"        "$(gettext 'Clean-up packages cache')" \
+"quit"         "$(gettext 'Exit Spk dialog')" 2>${tmp}
+	
+	# Handle options
+	opt=${?}
+	case "$opt" in
+		1|255) rm -rf ${tmpdir} && exit 0 ;;
+	esac
+	
+	# Handle actions
+	action=$(cat $tmp)
+	case "$action" in
+		info)
+			spk_info_box ;;
+		list)
+			spk-ls --short && spk_read ;;
+		upgrade)
+			spk-up && spk_read ;;
+		clean)
+			spk clean && spk_read ;;
+		quit)
+			rm -rf ${tmpdir} && exit 0 ;;
+	esac
+}
+
+#
+# Handle commands
+#
+
+case "$1" in
+	
+	"")
+		# No args: display Ncurses dialog
+		while true; do
+			main_box
+		done ;;
+	
+	*|*help|-h)
+		# Display help
+		help ;;
+esac
+
+# Clean exit
+rm -rf ${tmpdir}
+exit 0
