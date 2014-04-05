@@ -13,7 +13,7 @@
 # Functions
 #
 
-VERSION=1.0
+VERSION=1.3
 
 # Help and usage
 usage() {
@@ -28,6 +28,7 @@ $(boldify $(gettext "Commands:"))
   info        $(gettext "Display path, mirror and other stats")
   activity    $(gettext "Display packages activities")
   clean       $(gettext "Clean cache and temporary files")
+  reconf      $(gettext "Reconfigure an installed packages")
 
 $(boldify $(gettext "Options:"))
   --add       $(gettext "Install packages if mirrored")
@@ -90,6 +91,19 @@ case "$1" in
 		rm -rf $(dirname $tmpdir) && status
 		separator && newline
 		exit 0 ;;
+	reconf|reconfigure)
+		packages="$@"
+		[ "$all" ] && packages=$(ls $installed)
+		for pkg in ${packages}
+		do
+			receipt="$installed/$pkg/receipt"
+			[ ! -f "$receipt" ] && continue
+			if grep -q ^post_install ${receipt}; then
+				gettext "Configuring packages:"; echo " $pkg"
+				. ${receipt}
+				post_install
+			fi
+		done && exit 0 ;;
 esac
 
 #
