@@ -28,7 +28,7 @@ $(boldify $(gettext "Commands:"))
   info        $(gettext "Display path, mirror and other stats")
   activity    $(gettext "Display packages activities")
   clean       $(gettext "Clean cache and temporary files")
-  reconf      $(gettext "Reconfigure an installed packages")
+  reconf      $(gettext "Reconfigure installed packages")
 
 $(boldify $(gettext "Options:"))
   --add       $(gettext "Install packages if mirrored")

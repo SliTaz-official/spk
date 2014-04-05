@@ -21,7 +21,7 @@ functions:
 
 	* spk-ls     : List packages and packages files
 	* spk-add    : Install local or online pkgs
-	* spk-rm     : Remove packages with confirm in option
+	* spk-rm     : Remove packages with confirming option
 	* spk-up     : Upgrade the whole system
 	* spk-search : Search for packages or files
 	* spk-mirror : Manage official and extra mirrors
