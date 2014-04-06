@@ -46,6 +46,8 @@ install-doc:
 install: install-lib install-doc
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 -d $(DESTDIR)$(PREFIX)/sbin
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/applications
+	install -m 0755 -d $(DESTDIR)$(PREFIX)/share/pixmaps
 	install -m 0755 spk $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 spk-ls $(DESTDIR)$(PREFIX)/bin
 	install -m 0755 spk-find $(DESTDIR)$(PREFIX)/bin
@@ -55,6 +57,8 @@ install: install-lib install-doc
 	install -m 0755 spk-mirror $(DESTDIR)$(PREFIX)/sbin
 	install -m 0755 spk-up $(DESTDIR)$(PREFIX)/sbin
 	install -m 0755 spk-convert $(DESTDIR)$(PREFIX)/sbin
+	cp data/spk-dialog.desktop $(DESTDIR)$(PREFIX)/share/applications
+	cp data/spk.png $(DESTDIR)$(PREFIX)/share/pixmaps
 
 # Clean source
 
