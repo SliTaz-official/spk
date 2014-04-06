@@ -15,8 +15,8 @@
 #
 
 find="$1"
-count="/tmp/spk/count"
-mkdir -p $(dirname $count)
+cfile="/tmp/spk/count"
+mkdir -p $(dirname $cfile)
 
 #
 # Functions
@@ -27,7 +27,10 @@ usage() {
 	name=$(basename $0)
 	cat << EOT
 
-$(boldify $(gettext "Usage:")) $name [package]
+$(boldify $(gettext "Usage:")) $name [package|--options]
+
+$(boldify $(gettext "Options:"))
+  --short      $(gettext "Short packages list format")
 
 EOT
 	exit 0
@@ -41,22 +44,32 @@ newline
 boldify $(gettext "Spk find: $find")
 separator
 
-IFS="|"
-grep "$find" $pkgsdesc | while read pkg vers desc null
-do
-	echo "$pkg" >> $count
-	echo -n "$pkg"; indent 16 "$desc"
-done
-unset IFS
+# --files or packages
+if [ "$files" ]; then
+	type="Files"
+	echo "TODO"
+else
+	type="Packages"
+	IFS="|"
+	grep "$find" $pkgsdesc | while read pkg vers desc null
+	do
+		echo "$pkg" >> ${cfile}
+		echo "$(colorize 34 $pkg)${vers# }"
+		[ "$short" ] || echo "  $desc"
+	done
+	unset IFS
+fi
 
-if [ -f "$count" ]; then
-	count=$(cat $count | wc -l)
+# Sep and stats
+if [ -f "$cfile" ]; then
+	count=$(cat $cfile | wc -l)
 	color=32
 else
 	count=0
 	color=31
 fi
 separator
-boldify "Packages found: $(colorize $color $count)" && newline
-rm -rf $count
+boldify "$type found: $(colorize $color $count)" && newline
+
+rm -rf ${cfile}
 exit 0

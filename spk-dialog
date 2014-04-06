@@ -55,7 +55,7 @@ text_box() {
 		dialog --title "$title" \
 			--msgbox "\nERROR: $file does not exist" 10 ${width}
 	fi
-	# Handle options
+	# Handle buttons action
 	case "$?" in
 		3) editor ${file} ;;
 	esac
@@ -71,6 +71,34 @@ spk_info_box() {
 		--textbox "$out" ${height} ${width}
 }
 
+# Add packages
+spk_add_box() {
+    dialog \
+		--title "{ Spk Add }" \
+		--no-cancel \
+		--ok-label "$(gettext 'Install')" \
+		--inputbox "\n$(gettext 'Packages name you wich to install:')" \
+		${height} ${width} 2>${tmp}
+	pkgs=$(cat $tmp)
+	if [ "$pkgs" ]; then
+		clear && spk-add ${pkgs} && spk_read
+	fi
+}
+
+# Remove packages
+spk_rm_box() {
+    dialog \
+		--title "{ Spk Remove }" \
+		--no-cancel \
+		--ok-label "$(gettext 'Remove')" \
+		--inputbox "\n$(gettext 'Packages name you wich to remove:')" \
+		${height} ${width} 2>${tmp}
+	pkgs=$(cat $tmp)
+	if [ "$pkgs" ]; then
+		clear && spk-rm ${pkgs} && spk_read
+	fi
+}
+
 # Main Dialog menu
 main_box() {
 	dialog \
@@ -82,6 +110,8 @@ main_box() {
 "info"         "$(gettext 'Packages information')" \
 "list"         "$(gettext 'List installed packages')" \
 "upgrade"      "$(gettext 'Upgrade installed packages')" \
+"install"      "$(gettext 'Install new packages')" \
+"remove"       "$(gettext 'Remove installed packages')" \
 "clean"        "$(gettext 'Clean-up packages cache')" \
 "quit"         "$(gettext 'Exit Spk dialog')" 2>${tmp}
 	
@@ -99,9 +129,13 @@ main_box() {
 		list)
 			spk-ls --short && spk_read ;;
 		upgrade)
-			spk-up && spk_read ;;
+			clear && spk-up && spk_read ;;
+		install)
+			spk_add_box ;;
+		remove)
+			spk_rm_box ;;
 		clean)
-			spk clean && spk_read ;;
+			clear && spk clean && spk_read ;;
 		quit)
 			rm -rf ${tmpdir} && exit 0 ;;
 	esac
