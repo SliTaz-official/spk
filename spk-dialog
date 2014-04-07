@@ -77,7 +77,7 @@ spk_add_box() {
 		--title "{ Spk Add }" \
 		--no-cancel \
 		--ok-label "$(gettext 'Install')" \
-		--inputbox "\n$(gettext 'Packages name you wich to install:')" \
+		--inputbox "\n$(gettext 'Package names you wish to install:')" \
 		${height} ${width} 2>${tmp}
 	pkgs=$(cat $tmp)
 	if [ "$pkgs" ]; then
@@ -91,7 +91,7 @@ spk_rm_box() {
 		--title "{ Spk Remove }" \
 		--no-cancel \
 		--ok-label "$(gettext 'Remove')" \
-		--inputbox "\n$(gettext 'Packages name you wich to remove:')" \
+		--inputbox "\n$(gettext 'Package names you wish to remove:')" \
 		${height} ${width} 2>${tmp}
 	pkgs=$(cat $tmp)
 	if [ "$pkgs" ]; then
