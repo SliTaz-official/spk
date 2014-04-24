@@ -279,6 +279,8 @@ if [ "$upnb" -gt 0 ]; then
 			echo -e "\n" && exit 0
 		fi
 	fi
+	# Clean up cache first
+	spk clean
 	# Install and log all upgrade
 	for pkg in $(cat $pkgsup)
 	do
