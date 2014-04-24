@@ -1,0 +1,131 @@
+#!/bin/sh
+#
+# Spk-sql - SliTaz packages DB the SQLite way. This is for testing
+# SQLite speed to handle packages info. It may not be used to manage
+# OS system but for pkgs.slitaz.org search engine and arm.slitaz.org
+#
+# Copyright (C) 2014 SliTaz GNU/Linux - BSD License
+# Author: See AUTHORS files
+#
+. /usr/lib/slitaz/libspk.sh
+
+# Benchmarks:
+#
+# Listing all packages with:
+#
+#    spk-ls --short               : real	0m 10.92s
+#    spk-sql list --output=html   : real	0m 1.56s
+#
+#
+
+#db="${root}${PKGS_DB}/packages.sql"
+db="packages.sql"
+table="mirror"
+
+#wok=/home/slitaz/wok
+wok=/home/pankso/Projects/wok
+
+#
+# Functions
+#
+
+# Help and usage
+usage() {
+	name=$(basename $0)
+	cat << EOT
+
+$(boldify $(gettext "Usage:")) $name [command|package] packageN
+
+$(gettext "SliTaz SQLite packages DB manager")
+
+$(boldify $(gettext "Commands:"))
+  master       Show master record
+  tables       List all DB tables
+  dbi          Table database information
+  list         List SQL DB $table table
+  gendb        Generate a SQL DB of all packages
+
+$(boldify $(gettext "Options:"))
+  --output=    Set the output format (list, html)
+
+EOT
+	exit 0
+}
+
+# Create the SQL database
+create_db() {
+	rm -f $db
+	sqlite3 $db << EOT
+create table $table(
+	pkg,
+	version,
+	category,
+	url,
+	desc,
+	deps
+);
+EOT
+}
+
+#
+# Handle --options
+#
+
+for opt in $@
+do
+	case "$opt" in
+		*usage|*help) usage ;;
+		--count)
+			exit 0 ;;
+	esac
+done
+
+#
+# Handle commands
+#
+
+case "$1" in
+	"") usage ;;
+	master) sqlite3 $db 'select * from sqlite_master' ;;
+	tables) sqlite3 $db '.tables' ;;
+	
+	dbi)
+		# Data Base Info
+		du -sh ${db} ;;
+	
+	list)
+		# Very fast listing ou fancy output: html, tcl, tabs, ...
+		[ "$output" ] || output="list"
+		sqlite3 ${db} << EOT
+.mode $output
+select * from $table;
+EOT
+		;;
+	
+	gendb)
+		# Take long to build the +4300 pkgs DB!
+		time=$(date +%s)
+		echo "Initializing: $db --> $table"
+		create_db
+		for pkg in $(ls $wok)
+		do
+			echo "Inserting: $count: $pkg"
+			. ${wok}/${pkg}/receipt
+			sqlite3 ${db} << EOT
+insert into $table values(
+	"$PACAKAGE",
+	"$VERSION",
+	"$CATEGORY",
+	"$WEB_SITE",
+	"$SHORT_DESC",
+	"$DEPENDS"
+);
+EOT
+		done
+		time=$(($(date +%s) - $time))
+		echo -n "$nb "
+		gettext "packages added in"
+		echo " ${time}s ("$(date "+%Y%m%d %H:%M")")"
+		newline ;;
+
+esac && exit 0
