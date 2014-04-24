@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Spk-sql - SliTaz packages DB the SQLite way. This is for testing
-# SQLite speed to handle packages info. It may not be used to manage
+# SQLite's speed to handle packages info. It may not be used to manage
 # OS system but for pkgs.slitaz.org search engine and arm.slitaz.org
 #
 # Copyright (C) 2014 SliTaz GNU/Linux - BSD License
@@ -94,7 +94,7 @@ case "$1" in
 		du -sh ${db} ;;
 	
 	list)
-		# Very fast listing ou fancy output: html, tcl, tabs, ...
+		# Very fast listing of fancy output: html, tcl, tabs, ...
 		[ "$output" ] || output="list"
 		sqlite3 ${db} << EOT
 .mode $output
@@ -103,7 +103,7 @@ EOT
 		;;
 	
 	gendb)
-		# Take long to build the +4300 pkgs DB!
+		# Takes long to build the +4300 pkgs DB!
 		time=$(date +%s)
 		echo "Initializing: $db --> $table"
 		create_db
