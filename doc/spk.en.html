@@ -18,13 +18,23 @@
 <h2>SliTaz Packages Toolset</h2>
 
 <p>
-	Small alternative to TazPKG. Spk consists of small separate programs
-	for easier code maintainance and uses a shared library. Spk can handle
-	multiple packages on a cmdline as well as the ability to manage your 
-	own mirror.
+	SliTaz packages management new generation, fast, clen and unbloated.
+	Spk consists of small separate programs for easier code maintainance
+	and uses a shared library. Spk can handle multiple packages on a 
+	cmdline as well as the ability to manage your own mirror.
 </p>
 
-<h3>Usage and help</h3>
+<h3>Graphical user interface</h3>
+<p>
+	The Spk toolkit provide a Ncurses dialog interface for all basic tasks.
+	You must use the up-down arrow and ENTER to activate a button or you
+	can use your mouse to select menu items and press on the buttons.
+	Spk-dialog can be found in the desktop menu under "System Tools" and
+	can be run un the Linux framebuffer or a X terminal.
+</p>
+
+<!-- Cmdline usage -->
+<h3>Cmdline usage and help</h3>
 <p>
 	All spk tools provide a small built-in help usage that you can display 
 	with the command 'usage' or 'help'. It also has some options to 
@@ -44,6 +54,7 @@
 # spk busybox glib
 </pre>
 
+<!-- spk-add -->
 <h3>Add packages</h3>
 <p>
 	Spk will handle dependencies. To install new packages simply use
@@ -54,6 +65,7 @@
 # spk package --add
 </pre>
 
+<!-- spk-rm -->
 <h3>Remove packages</h3>
 <p>
 	To remove packages simply:
@@ -62,6 +74,7 @@
 # spk-rm package1 package2 ...
 </pre>
 
+<!-- spk-up -->
 <h3>Packages update</h3>
 <p>
 	To get the last list of packages and to update your system you have
@@ -74,6 +87,7 @@
 # spk-up package1 package2 ...
 </pre>
 
+<!-- spk-find -->
 <h3>Find packages</h3>
 <p>
 	The spk-find util finds a package from a full packages list available on the
@@ -106,7 +120,8 @@
 </div>
 
 <footer>
-	Copyright © 2014 <a href="http://www.slitaz.org/">SliTaz GNU/Linux</a>
+	Copyright &copy; 2014 
+	<a href="http://www.slitaz.org/">SliTaz GNU/Linux</a>
 </footer>
 
 </body>
