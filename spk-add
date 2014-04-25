@@ -25,7 +25,7 @@ $(boldify $(gettext "Options:"))
   --forced    $(gettext "Force package reinstallation")
   --root=     $(gettext "Set the root file system path")
   --nodeps    $(gettext "Don't resolve packages dependencies")
-  --newconf   $(gettext "Don't keep installed configs files")
+  --newconf   $(gettext "Don't keep installed config files")
   --debug     $(gettext "Display some useful debug information")
 
 $(boldify $(gettext "Examples:"))
@@ -192,8 +192,8 @@ install_package() {
 		pre_install $root
 	fi
 
-	# Handle Config Files set in receipt. Keep system confgs: they can
-	# be mofified/customized by users, slitaz-config, etc.
+	# Handle Config Files set in receipt. Keep system configs: they can
+	# be modified/customized by users, slitaz-config, etc.
 	if [ "$CONFIG_FILES" ] && [ ! "$newconf" ]; then
 		gettext "Keeping configuration files..."
 		for file in ${CONFIG_FILES}; do
