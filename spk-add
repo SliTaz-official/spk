@@ -25,6 +25,7 @@ $(boldify $(gettext "Options:"))
   --forced    $(gettext "Force package reinstallation")
   --root=     $(gettext "Set the root file system path")
   --nodeps    $(gettext "Don't resolve packages dependencies")
+  --newconf   $(gettext "Don't keep installed configs files")
   --debug     $(gettext "Display some useful debug information")
 
 $(boldify $(gettext "Examples:"))
@@ -122,7 +123,7 @@ install_package() {
 
 	# Handle cross compiled packages
 	case "$SLITAZ_ARCH" in
-		arm|x86_64) arch="-${SLITAZ_ARCH}" ;;
+		arm*|x86_64) arch="-${SLITAZ_ARCH}" ;;
 	esac
 	tmpdir="$tmpdir/$PACKAGE-${VERSION}${arch}"
 
@@ -191,28 +192,15 @@ install_package() {
 		pre_install $root
 	fi
 
-	# Handle Config Files from receipt
-	if [ -n "$CONFIG_FILES" ]; then
-		cd $fs || exit 1
-		# save 'official' configuration files
-		eval_gettext "Saving configuration files for \$package_name... "
-
-		local confs
-		for i in $CONFIG_FILES; do
-			confs="$confs $(find ${i#/} -type f 2> /dev/null)"
-		done
-
-		echo $confs | cpio -o -H newc --quiet | gzip -9 > \
-			$package_dir/volatile.cpio.gz
-
-		# keep user configuration files
-		for configfile in $confs; do
-			[ -e $configfile ] || continue
-			cp -a $configfile fs/$configfile
-		done
-		status
-		cd - >/dev/null
+	# Handle Config Files set in receipt. Keep system confgs: they can
+	# be mofified/customized by users, slitaz-config, etc.
+	if [ "$CONFIG_FILES" ] && [ ! "$newconf" ]; then
+		gettext "Keeping configuration files..."
+		for file in ${CONFIG_FILES}; do
+			cp -f ${file} fs/ 2>/dev/null
+		done; status
 	fi
+	
 	# Merge package FS with $root
 	nb=$(cat files.list | wc -l)
 	gettext "Installing files:"; echo -n " $nb"
