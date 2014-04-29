@@ -72,7 +72,8 @@ update_databases() {
 install_package() {
 	local package_file=$1
 
-	# Set by receipt: pre_depends() DEPENDS SELF_INSTALL CONFIG_FILES post_install()
+	# Set by receipt: pre_depends() DEPENDS SELF_INSTALL CONFIG_FILES 
+	# pre_install post_install()
 
 	local package_name=$PACKAGE
 	local package_dir="$installed/$package_name"
@@ -195,10 +196,17 @@ install_package() {
 	# Handle Config Files set in receipt. Keep system configs: they can
 	# be modified/customized by users, slitaz-config, etc.
 	if [ "$CONFIG_FILES" ] && [ ! "$newconf" ]; then
-		gettext "Keeping configuration files..."
+		ccf="$(echo $CONFIG_FILES | wc -l)"
+		colorize 34 "$(gettext 'Keeping configuration files: '; echo $ccf)"
 		for file in ${CONFIG_FILES}; do
-			cp -f ${file} fs/ 2>/dev/null
-		done; status
+			if [ -f "${file}" ]; then
+				gettext "Keeping:"; echo -n " $file"
+				dir=$(dirname $file)
+				cp -f ${file} fs/${dir}; 2>/dev/null status
+				debug "cp -f ${file} fs/${dir}"
+			fi
+		done
+		unset CONFIG_FILES
 	fi
 	
 	# Merge package FS with $root
