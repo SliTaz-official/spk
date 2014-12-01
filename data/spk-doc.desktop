@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=SliTaz Packages Doc
+Name[ru]=Документация Spk
 Exec=browser file:///usr/share/doc/spk/spk.html
 Icon=slitaz-doc
 Categories=Documentation;

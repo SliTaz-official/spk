@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=Spk Dialog
+Name[ru]=Диалог Spk
 Exec=terminal -e 'su -c spk-dialog'
 Icon=spk
 Categories=System;
