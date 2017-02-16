@@ -149,7 +149,9 @@ check_download() {
 	debug "mirror $SUM : $msum"
 	debug "local $SUM  : $sum"
 	if [ "$sum" != "$msum" ]; then
-		rm -f $file && download "$file" $mirror
+		gettext "ERROR: Checking:"; colorize 31 " ${CHECKSUM} $(basename $file)"
+		rm -f $file #&& download "$file" $mirror
+		newline && exit 1
 	fi
 }
 
@@ -201,7 +203,7 @@ download() {
 	# Be sure the file was fetched.
 	if [ ! -f "$CACHE_DIR/$file" ] && [ ! -f "$pwd/$file" ]; then
 		gettext "ERROR: Missing file:"; colorize 31 " $CACHE_DIR/$file"
-		newline && exit 1
+		newline && return 1
 	fi
 }
 
