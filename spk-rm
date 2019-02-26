@@ -149,7 +149,7 @@ do
 		continue
 	fi
 	count=$(($count + 1))
-	[ "$count" == 1 ] && newline
+	[ "$count" = 1 ] && newline
 	remove
 	log "Removed package: $pkg"
 done

@@ -161,7 +161,7 @@ do
 	[ -d "$url" ] && url="dir:$url"
 	case "$url" in
 		http://*|ftp://|local)
-			[ "$count" == 0 ] && newline
+			[ "$count" = 0 ] && newline
 			count=$(($count + 1))
 			url="${url%/}/"
 			debug "checking: $url"
@@ -215,7 +215,7 @@ do
 			pkgsdir=${dir%/}
 			debug "dir: $dir"
 			nb=$(ls $pkgsdir/*.tazpkg 2>/dev/null | wc -l)
-			if [ "$nb" == 0 ]; then
+			if [ "$nb" = 0 ]; then
 				gettext "No packages found in:"; boldify " $pkgsdir"
 				continue
 			fi
@@ -284,7 +284,7 @@ do
 			fi ;;
 		--*) continue ;;
 		*)
-			[ "$count" == 0 ] && newline
+			[ "$count" = 0 ] && newline
 			count=$(($count + 1))
 			# Should we handle --rm also here ?
 			if [ -d "$extradb/$url" ]; then

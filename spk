@@ -122,7 +122,7 @@ do
 			package_full=$(full_package $pkg)
 			mirrored_pkg $pkg
 			[ "$mirrored" ] || continue
-			[ "$count" == 0 ] && newline
+			[ "$count" = 0 ] && newline
 			count=$(($count + 1))
 			download $package_full $mirror
 			unset_mirrored
@@ -168,7 +168,7 @@ do
 				# Display package's log
 				if [ -f "$logdir/$pkg/install.log" ]; then
 					count=$(($count + 1))
-					[ "$count" == "1" ] && newline
+					[ "$count" = "1" ] && newline
 					colorize 36 $(gettext "Install log for:"; echo " $pkg")
 					separator
 					cat $logdir/$pkg/install.log
@@ -194,7 +194,7 @@ do
 				continue ;;
 		esac
 		count=$(($count + 1))
-		[ "$count" == 1 ] && newline
+		[ "$count" = 1 ] && newline
 		unset_receipt
 		source_receipt $installed/$pkg/receipt
 		boldify $(gettext "Package") $pkg
@@ -215,7 +215,7 @@ do
 				continue ;;
 		esac
 		count=$(($count + 1))
-		[ "$count" == 1 ] && newline
+		[ "$count" = 1 ] && newline
 		boldify $(gettext "Package") $pkg
 		separator
 		gettext "Status     :"; colorize 31 " not installed"

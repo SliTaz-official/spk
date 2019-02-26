@@ -185,7 +185,7 @@ download() {
 		return 0
 	else
 		[ "$verbose" ] && echo "URL: $uri/"
-		if [ "$db" == "$PKGS_DB" ]; then
+		if [ "$db" = "$PKGS_DB" ]; then
 			gettext "Using official mirror:"
 		else
 			gettext "Using extra mirror:"

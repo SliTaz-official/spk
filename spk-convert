@@ -465,7 +465,7 @@ check_root
 
 for pkg in $@
 do
-	if [ "$(dd if=$pkg bs=8 count=1 skip=1 2> /dev/null)" == "debian-b" ]; 
+	if [ "$(dd if=$pkg bs=8 count=1 skip=1 2> /dev/null)" = "debian-b" ]; 
 	then
 		convert_deb $pkg
 	else

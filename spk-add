@@ -164,9 +164,9 @@ install_package() {
 			local count=0
 			for pkg_file in $list; do
 				local name=$(basename $(dirname $pkg_file))
-				[  "$package_name" == "$name" ] && continue 2
+				[  "$package_name" = "$name" ] && continue 2
 				count=$(($count +1))
-				[ "$count" == "1" ] && gettext "Modified package:"; \
+				[ "$count" = "1" ] && gettext "Modified package:"; \
 					colorize 31 " $name"
 				gettext "Overwriting file:"; echo " $file"
 				# If confirm is set, ask to remove. Do we want that ?
@@ -275,7 +275,7 @@ install_local() {
 	local package_file="$1"
 	#check_valid_tazpkg $package_file
 	if [ -f "$package_file" ]; then
-		if [ $(dirname $package_file) == "." ]; then
+		if [ $(dirname $package_file) = "." ]; then
 			package_file=$(pwd)/$package_file
 		fi
 		debug "package file: $package_file"
@@ -289,7 +289,7 @@ install_local() {
 	extract_receipt $tmpdir $package_file
 	source $tmpdir/receipt
 	[ "$forced" ] || check_installed $PACKAGE
-	[ "$count" == "1" ] && newline
+	[ "$count" = "1" ] && newline
 	install_package $package_file
 	update_databases
 }
@@ -323,7 +323,7 @@ install_web() {
 	esac
 
 	# Lets fetch the package by download()
-	[ "$count" == 1 ] && newline
+	[ "$count" = 1 ] && newline
 	debug "spk-add package: $package_name"
 	download "$package_full" $mirror
 	cd $CACHE_DIR

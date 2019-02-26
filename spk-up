@@ -53,7 +53,7 @@ recharge_lists() {
 	local check="$extradb/*/mirror $PKGS_DB/mirror"
 	if [ "$mirror" ]; then
 		check=$extradb/$mirror/mirror
-		[ "$mirror" == "main" ] && check=$PKGS_DB/mirror
+		[ "$mirror" = "main" ] && check=$PKGS_DB/mirror
 	fi
 	for mirror in $check; do
 		[ -f "$mirror" ] || continue
@@ -63,7 +63,7 @@ recharge_lists() {
 		name=$(basename $(dirname $mirror))
 		url=$(cat $mirror)
 		lists="packages.list packages.md5 packages.desc packages.equiv files.list.lzma"
-		[ "$(dirname $mirror)" == "$PKGS_DB" ] && name="main"
+		[ "$(dirname $mirror)" = "$PKGS_DB" ] && name="main"
 		[ "$quiet" ] && quiet="-q"
 
 		gettext "Checking mirror:"; colorize 34 " $name"
@@ -75,7 +75,7 @@ recharge_lists() {
 		wget -q ${url%/}/ID
 		debug "ID: $(cat ID)"
 		debug "ID.bak: $(cat ID.bak)"
-		if [ $(cat ID) == $(cat ID.bak) ] && [ ! "$forced" ]; then
+		if [ $(cat ID) = $(cat ID.bak) ] && [ ! "$forced" ]; then
 			gettext "Mirror is up-to-date"; newline
 			continue
 		fi
@@ -120,7 +120,7 @@ up_type() {
 
 	new=$(grep "^$PACKAGE |" $dbdesc | awk '{print $3}')
 
-	if [ "$VERSION" == "$new" ]; then
+	if [ "$VERSION" = "$new" ]; then
 		build_count=$(($build_count + 1))
 		echo -n $(colorize 34 $(indent 48 $(gettext "New build")))
 	else
@@ -200,7 +200,7 @@ do
 			pkg="$arg"
 			system=no
 			check_root
-			[ "$count" == 0 ] && up_headers
+			[ "$count" = 0 ] && up_headers
 			if is_package_installed $pkg; then
 				count=$(($count +1))
 				cd $installed
@@ -252,7 +252,7 @@ upnb=$(cat $pkgsup | wc -l)
 pkgs=$(ls | wc -l)
 time=$(($(date +%s) - $time))
 
-if [ "$upnb" == 0 ] && [ "$blocked_count" == 0 ]; then
+if [ "$upnb" = 0 ] && [ "$blocked_count" = 0 ]; then
 	gettext "System is up-to-date..."; newline
 fi
 separator

@@ -109,7 +109,7 @@ do
 				[ -f "$installed/$pkg/files.list" ] || continue
 				nb=$(cat $installed/$pkg/files.list | wc -l)
 				count=$(($count + 1))
-				[ "$count" == 1 ] && newline
+				[ "$count" = 1 ] && newline
 				# List modifiers
 				if [ "$modifiers" ]; then
 					modifiers=$installed/$pkg/modifiers
